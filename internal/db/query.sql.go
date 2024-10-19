@@ -52,3 +52,12 @@ func (q *Queries) GetTodayWeatherSummary(ctx context.Context, cityIDParam int32)
 	err := row.Scan(&get_latest_daily_summary)
 	return get_latest_daily_summary, err
 }
+
+const refreshDailyWeatherSummary = `-- name: RefreshDailyWeatherSummary :exec
+CALL refresh_continuous_aggregate('daily_weather_summary_view', localtimestamp - INTERVAL '1 hour', localtimestamp)
+`
+
+func (q *Queries) RefreshDailyWeatherSummary(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, refreshDailyWeatherSummary)
+	return err
+}
