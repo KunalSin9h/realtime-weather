@@ -13,31 +13,91 @@ import (
 
 const addWeatherData = `-- name: AddWeatherData :exec
 INSERT INTO weather_data (
-    time, city_id, condition_id, temperature, feels_like, humidity, wind_speed
+    time, city_id, temperature, feels_like, humidity, wind_speed, condition_id
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7
+  $1, $2, $3, $4, $5, $6, (
+        SELECT id FROM weather_conditions WHERE condition = $7
+    )
 )
 `
 
 type AddWeatherDataParams struct {
 	Time        pgtype.Timestamptz
 	CityID      int32
-	ConditionID int32
 	Temperature pgtype.Numeric
 	FeelsLike   pgtype.Numeric
 	Humidity    pgtype.Numeric
 	WindSpeed   pgtype.Numeric
+	Condition   string
 }
 
 func (q *Queries) AddWeatherData(ctx context.Context, arg AddWeatherDataParams) error {
 	_, err := q.db.Exec(ctx, addWeatherData,
 		arg.Time,
 		arg.CityID,
-		arg.ConditionID,
 		arg.Temperature,
 		arg.FeelsLike,
 		arg.Humidity,
 		arg.WindSpeed,
+		arg.Condition,
+	)
+	return err
+}
+
+const createAlertThreshold = `-- name: CreateAlertThreshold :exec
+INSERT INTO alert_thresholds (
+    name,
+    city_id,
+    min_temperature,
+    max_temperature,
+    min_humidity,
+    max_humidity,
+    min_wind_speed,
+    max_wind_speed,
+    occur_limit,
+    condition_id
+) VALUES (
+    $1,
+    $2,
+    $3,
+    $4,
+    $5,
+    $6,
+    $7,
+    $8,
+    $9,
+    (
+        SELECT id FROM weather_conditions WHERE condition = $10
+    )
+)
+`
+
+type CreateAlertThresholdParams struct {
+	Name           string
+	CityID         int32
+	MinTemperature pgtype.Numeric
+	MaxTemperature pgtype.Numeric
+	MinHumidity    pgtype.Numeric
+	MaxHumidity    pgtype.Numeric
+	MinWindSpeed   pgtype.Numeric
+	MaxWindSpeed   pgtype.Numeric
+	OccurLimit     int32
+	Condition      string
+}
+
+// ALERTS
+func (q *Queries) CreateAlertThreshold(ctx context.Context, arg CreateAlertThresholdParams) error {
+	_, err := q.db.Exec(ctx, createAlertThreshold,
+		arg.Name,
+		arg.CityID,
+		arg.MinTemperature,
+		arg.MaxTemperature,
+		arg.MinHumidity,
+		arg.MaxHumidity,
+		arg.MinWindSpeed,
+		arg.MaxWindSpeed,
+		arg.OccurLimit,
+		arg.Condition,
 	)
 	return err
 }
@@ -83,18 +143,6 @@ func (q *Queries) GetTodayWeatherSummary(ctx context.Context, cityIDParam int32)
 	var get_latest_daily_summary interface{}
 	err := row.Scan(&get_latest_daily_summary)
 	return get_latest_daily_summary, err
-}
-
-const getWeatherConditionID = `-- name: GetWeatherConditionID :one
-SELECT id FROM weather_conditions WHERE condition = $1
-`
-
-// WeatherConditions
-func (q *Queries) GetWeatherConditionID(ctx context.Context, condition string) (int32, error) {
-	row := q.db.QueryRow(ctx, getWeatherConditionID, condition)
-	var id int32
-	err := row.Scan(&id)
-	return id, err
 }
 
 const refreshDailyWeatherSummary = `-- name: RefreshDailyWeatherSummary :exec

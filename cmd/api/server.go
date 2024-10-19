@@ -14,6 +14,16 @@ func (c *Config) setUpAndRunServer() error {
 	// Serve Static Frontend Dashboard
 	mux.Handle("/", http.FileServer(http.Dir("./ui/dist/")))
 
+	// Get Daily Weather Summary
+	// Refresh Daily Weather Summary
+
+	// Create Alert Thresholds
+	mux.HandleFunc("POST /alert", c.CreateAlert)
+
+	// Delete Alert Thresholds
+	mux.HandleFunc("DELETE /alert", c.DeleteAlert)
+
+	// SERVER
 	server := &http.Server{
 		Addr:    fmt.Sprintf("%s:%s", HOST, PORT),
 		Handler: mux,

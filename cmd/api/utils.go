@@ -1,9 +1,13 @@
 package main
 
+// Some utility function
+
 import (
+	"fmt"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/kunalsin9h/realtime-weather/internal/db"
 	"log/slog"
+	"net/http"
 	"os"
 	"time"
 )
@@ -39,4 +43,15 @@ func crashWithError(msg string, err error) {
 	slog.Warn(msg)
 	slog.Error(err.Error())
 	os.Exit(1)
+}
+
+func sendError(w http.ResponseWriter, err error, code ...int) {
+	w.WriteHeader(http.StatusBadRequest)
+
+	if len(code) > 0 {
+		w.WriteHeader(code[0])
+	}
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	fmt.Fprintln(w, err.Error())
 }

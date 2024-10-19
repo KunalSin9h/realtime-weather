@@ -73,6 +73,12 @@ func main() {
 	// concurrently fetch data at the app.interval interval
 	go app.dataSourceFetcher(ctx)
 
+	// emails and websockets (SSE) notification
+	// concurrently get the alerts form alerts table and send them
+	// In queue like fashion
+	// see blog (my own): https://kunalsin9h.com/blog/potgres-task-queue
+	// go sendAlerts(ctx)
+
 	// Setup and Run server
 	// This will run Server on HOST:PORT
 	log.Fatal(app.setUpAndRunServer())

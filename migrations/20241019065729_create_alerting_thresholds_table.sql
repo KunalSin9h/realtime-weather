@@ -1,6 +1,7 @@
 -- Alert Thresholds
 CREATE TABLE alert_thresholds (
     id SERIAL PRIMARY KEY,
+    name VARCHAR(125) NOT NULL,
     city_id INTEGER NOT NULL,
     condition_id INTEGER, -- For condition thresholds, like alert me when it "Rains"
     min_temperature DECIMAL(5,2),
@@ -23,10 +24,8 @@ CREATE INDEX ON alert_thresholds (city_id);
 CREATE TABLE alerts (
     id SERIAL PRIMARY KEY,
     time TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    city_id INTEGER NOT NULL,
     threshold_id INTEGER NOT NULL,
     message TEXT NOT NULL,
     active BOOLEAN NOT NULL DEFAULT true,
-    FOREIGN KEY (city_id) REFERENCES cities(id),
     FOREIGN KEY (threshold_id) REFERENCES alert_thresholds(id)
 );

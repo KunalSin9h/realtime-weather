@@ -1,8 +1,10 @@
 -- name: AddWeatherData :exec
 INSERT INTO weather_data (
-    time, city_id, condition_id, temperature, feels_like, humidity, wind_speed
+    time, city_id, temperature, feels_like, humidity, wind_speed, condition_id
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7
+  $1, $2, $3, $4, $5, $6, (
+        SELECT id FROM weather_conditions WHERE condition = $7
+    )
 );
 
 -- name: GetTodayWeatherSummary :one
@@ -16,6 +18,30 @@ CALL refresh_continuous_aggregate('daily_weather_summary_view', localtimestamp -
 -- name: GetAllCities :many
 SELECT * FROM cities;
 
--- WeatherConditions
--- name: GetWeatherConditionID :one
-SELECT id FROM weather_conditions WHERE condition = $1;
+-- ALERTS
+-- name: CreateAlertThreshold :exec
+INSERT INTO alert_thresholds (
+    name,
+    city_id,
+    min_temperature,
+    max_temperature,
+    min_humidity,
+    max_humidity,
+    min_wind_speed,
+    max_wind_speed,
+    occur_limit,
+    condition_id
+) VALUES (
+    $1,
+    $2,
+    $3,
+    $4,
+    $5,
+    $6,
+    $7,
+    $8,
+    $9,
+    (
+        SELECT id FROM weather_conditions WHERE condition = $10
+    )
+);

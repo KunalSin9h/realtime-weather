@@ -125,19 +125,11 @@ func fetchWeatherData(ctx context.Context, city *db.City, query *db.Queries) err
 		return err
 	}
 
-	// find what weather condition id (in db) we have
-	// weather condition id
-	wcId, err := query.GetWeatherConditionID(ctx, weatherData.Weather[0].Main) // like "Rain", "Haze"
-
-	if err != nil {
-		return err
-	}
-
 	// insert the weather data into db
 	err = query.AddWeatherData(ctx, db.AddWeatherDataParams{
 		Time:        calTimestampWithTZ(weatherData.DT, weatherData.Timezone),
 		CityID:      city.ID,
-		ConditionID: wcId,
+		Condition:   weatherData.Weather[0].Main,
 		Temperature: weatherData.Main.Temp,
 		FeelsLike:   weatherData.Main.FeelsLike,
 		Humidity:    weatherData.Main.Humidity,

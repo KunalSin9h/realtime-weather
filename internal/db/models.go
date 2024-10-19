@@ -11,7 +11,6 @@ import (
 type Alert struct {
 	ID          int32
 	Time        pgtype.Timestamptz
-	CityID      int32
 	ThresholdID int32
 	Message     string
 	Active      bool
@@ -19,6 +18,7 @@ type Alert struct {
 
 type AlertThreshold struct {
 	ID             int32
+	Name           string
 	CityID         int32
 	ConditionID    pgtype.Int4
 	MinTemperature pgtype.Numeric
