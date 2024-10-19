@@ -11,3 +11,11 @@ SELECT * FROM get_latest_daily_summary($1);
 -- name: RefreshDailyWeatherSummary :exec
 CALL refresh_continuous_aggregate('daily_weather_summary_view', localtimestamp - INTERVAL '1 hour', localtimestamp);
 -- Manually Refresh the daily_weather_summary_view of past 1 hour
+
+-- CITIES
+-- name: GetAllCities :many
+SELECT * FROM cities;
+
+-- WeatherConditions
+-- name: GetWeatherConditionID :one
+SELECT id FROM weather_conditions WHERE condition = $1;

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/jackc/pgx/v5"
 	"log/slog"
 	"os"
@@ -16,10 +17,11 @@ type Config struct {
 }
 
 var (
-	PORT      = "7000"
-	HOST      = "0.0.0.0"
-	INTERVAL  = "3m" // time interval for data fetching from source
-	TIMESCALE = "postgresql://admin:admin@localhost:5432/weather?sslmode=disable"
+	PORT                 = "7000"
+	HOST                 = "0.0.0.0"
+	INTERVAL             = "3m" // time interval for data fetching from source
+	OPEN_WEATHER_API_KEY = ""
+	TIMESCALE            = "postgresql://admin:admin@localhost:5432/weather?sslmode=disable"
 )
 
 func init() {
@@ -35,13 +37,23 @@ func init() {
 		INTERVAL = os.Getenv("INTERVAL")
 	}
 
+	if os.Getenv("OPEN_WEATHER_API_KEY") != "" {
+		OPEN_WEATHER_API_KEY = os.Getenv("OPEN_WEATHER_API_KEY")
+	} else {
+		crashWithError("Missing OPEN_WEATHER_API_KEY in env vars", fmt.Errorf(""))
+	}
+
 	if os.Getenv("POSTGRES") != "" {
 		TIMESCALE = os.Getenv("POSTGRES")
 	}
 }
 
 func main() {
-	ctx := context.Background()
+	// Use signals to gracefully shut down all the running go routines
+	// and clear resource
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
+
 	var app Config
 
 	// parse interval from env
@@ -62,13 +74,8 @@ func main() {
 
 	app.dbConn = db
 
-	// Use signals to gracefully shut down all the running go routines
-	// and clear resource
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
-
 	// concurrently fetch data at the app.interval interval
-	go app.dataSourceFetcher(ctx)
+	app.dataSourceFetcher(ctx, OPEN_WEATHER_API_KEY)
 }
 
 func crashWithError(msg string, err error) {

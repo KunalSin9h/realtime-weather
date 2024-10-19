@@ -8,6 +8,30 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Alert struct {
+	ID          int32
+	Time        pgtype.Timestamptz
+	CityID      int32
+	ThresholdID int32
+	Message     string
+	Active      bool
+}
+
+type AlertThreshold struct {
+	ID             int32
+	CityID         int32
+	ConditionID    pgtype.Int4
+	MinTemperature pgtype.Numeric
+	MaxTemperature pgtype.Numeric
+	MinHumidity    pgtype.Numeric
+	MaxHumidity    pgtype.Numeric
+	MinWindSpeed   pgtype.Numeric
+	MaxWindSpeed   pgtype.Numeric
+	OccurLimit     int32
+	OccurCount     int32
+	Active         bool
+}
+
 type City struct {
 	ID        int32
 	Name      string

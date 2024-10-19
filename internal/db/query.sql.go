@@ -42,6 +42,38 @@ func (q *Queries) AddWeatherData(ctx context.Context, arg AddWeatherDataParams) 
 	return err
 }
 
+const getAllCities = `-- name: GetAllCities :many
+
+SELECT id, name, latitude, longitude FROM cities
+`
+
+// Manually Refresh the daily_weather_summary_view of past 1 hour
+// CITIES
+func (q *Queries) GetAllCities(ctx context.Context) ([]City, error) {
+	rows, err := q.db.Query(ctx, getAllCities)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []City
+	for rows.Next() {
+		var i City
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Latitude,
+			&i.Longitude,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getTodayWeatherSummary = `-- name: GetTodayWeatherSummary :one
 SELECT get_latest_daily_summary FROM get_latest_daily_summary($1)
 `
@@ -51,6 +83,18 @@ func (q *Queries) GetTodayWeatherSummary(ctx context.Context, cityIDParam int32)
 	var get_latest_daily_summary interface{}
 	err := row.Scan(&get_latest_daily_summary)
 	return get_latest_daily_summary, err
+}
+
+const getWeatherConditionID = `-- name: GetWeatherConditionID :one
+SELECT id FROM weather_conditions WHERE condition = $1
+`
+
+// WeatherConditions
+func (q *Queries) GetWeatherConditionID(ctx context.Context, condition string) (int32, error) {
+	row := q.db.QueryRow(ctx, getWeatherConditionID, condition)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
 }
 
 const refreshDailyWeatherSummary = `-- name: RefreshDailyWeatherSummary :exec
