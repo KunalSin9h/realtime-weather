@@ -17,7 +17,7 @@ type Config struct {
 }
 
 var (
-	PORT                 = "7000"
+	PORT                 = "5000"
 	HOST                 = "0.0.0.0"
 	INTERVAL             = "3m" // time interval for data fetching from source
 	OPEN_WEATHER_API_KEY = ""

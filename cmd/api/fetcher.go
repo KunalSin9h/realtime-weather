@@ -20,8 +20,10 @@ func (c *Config) dataSourceFetcher(ctx context.Context, apiKey string) {
 	ticker := time.NewTicker(c.interval)
 	defer ticker.Stop()
 
+	query := db.New(c.dbConn)
+
 	// Run this upfront
-	err := c.findAllCitiesAndGetWeather(ctx, apiKey)
+	err := c.findAllCitiesAndGetWeather(ctx, query, apiKey)
 	if err != nil {
 		slog.Error(err.Error())
 	}
@@ -31,7 +33,7 @@ func (c *Config) dataSourceFetcher(ctx context.Context, apiKey string) {
 		select {
 		case <-ticker.C:
 			// Now run it on interval
-			err := c.findAllCitiesAndGetWeather(ctx, apiKey)
+			err := c.findAllCitiesAndGetWeather(ctx, query, apiKey)
 			if err != nil {
 				slog.Error(err.Error())
 			}
@@ -44,10 +46,9 @@ func (c *Config) dataSourceFetcher(ctx context.Context, apiKey string) {
 	}
 }
 
-func (c *Config) findAllCitiesAndGetWeather(ctx context.Context, apiKey string) error {
+func (c *Config) findAllCitiesAndGetWeather(ctx context.Context, query *db.Queries, apiKey string) error {
 	// fetch all weather data for all city again
 	// get all the cities
-	query := db.New(c.dbConn)
 	cities, err := query.GetAllCities(ctx)
 
 	if err != nil {
@@ -56,7 +57,7 @@ func (c *Config) findAllCitiesAndGetWeather(ctx context.Context, apiKey string) 
 
 	// For all cities
 	for _, city := range cities {
-		err = fetchWeatherData(ctx, city, query, apiKey)
+		err = fetchWeatherData(ctx, &city, query, apiKey)
 		if err != nil {
 			slog.Error(err.Error())
 		}
@@ -87,7 +88,7 @@ type WindCondition struct {
 	Speed pgtype.Numeric `json:"speed"`
 }
 
-func fetchWeatherData(ctx context.Context, city db.City, query *db.Queries, apiKey string) error {
+func fetchWeatherData(ctx context.Context, city *db.City, query *db.Queries, apiKey string) error {
 	slog.Info(fmt.Sprintf("Fetching weather data for city %s", city.Name))
 
 	lat, lon, err := getFloatLatLon(city)
@@ -95,7 +96,7 @@ func fetchWeatherData(ctx context.Context, city db.City, query *db.Queries, apiK
 		return err
 	}
 
-	apiUrl := fmt.Sprintf("https://api.openweathermap.org/data/2.5/weather?lat=%v&lon=%v&appid=%s",
+	apiUrl := fmt.Sprintf("https://api.openweathermap.org/data/2.5/weather?lat=%v&lon=%v&appid=%s&units=metric",
 		lat, lon, apiKey)
 
 	resp, err := http.Get(apiUrl)
@@ -124,7 +125,7 @@ func fetchWeatherData(ctx context.Context, city db.City, query *db.Queries, apiK
 		return err
 	}
 
-	// find what weather condition(in db) we have
+	// find what weather condition id (in db) we have
 	// weather condition id
 	wcId, err := query.GetWeatherConditionID(ctx, weatherData.Weather[0].Main) // like "Rain", "Haze"
 
@@ -143,32 +144,6 @@ func fetchWeatherData(ctx context.Context, city db.City, query *db.Queries, apiK
 		WindSpeed:   weatherData.Wind.Speed,
 	})
 
+	slog.Info("Done")
 	return err
-}
-
-func calTimestampWithTZ(unix, timezone int64) pgtype.Timestamptz {
-	// convert unix timestamp to time.Time
-	timestamp := time.Unix(unix, 0)
-	location := time.FixedZone("API Timezone", int(timezone))
-
-	timeStampWithTimezone := timestamp.In(location)
-
-	return pgtype.Timestamptz{
-		Time:  timeStampWithTimezone,
-		Valid: true,
-	}
-}
-
-func getFloatLatLon(city db.City) (float64, float64, error) {
-	latitude, err := city.Latitude.Float64Value()
-	if err != nil {
-		return 0, 0, err
-	}
-
-	longitude, err := city.Longitude.Float64Value()
-	if err != nil {
-		return 0, 0, err
-	}
-
-	return latitude.Float64, longitude.Float64, nil
 }
