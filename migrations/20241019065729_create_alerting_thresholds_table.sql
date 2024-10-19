@@ -10,9 +10,6 @@ CREATE TABLE alert_thresholds (
     max_humidity DECIMAL(5,2),
     min_wind_speed DECIMAL(5,2),
     max_wind_speed DECIMAL(5,2),
-    occur_limit INTEGER NOT NULL DEFAULT 1, -- For watching number of alerts, if only >= update_limit then send alerts
-    -- 35 degrees Celsius for $update_limit consecutive updates then only send alert., here update_limit can be 2
-    occur_count INTEGER NOT NULL DEFAULT 0, -- Number of times this threshold is passed, ony alert then occur_count = occur_limit
     active BOOLEAN NOT NULL DEFAULT true,
     FOREIGN KEY (city_id) REFERENCES cities(id),
     FOREIGN KEY (condition_id) REFERENCES weather_conditions(id)
@@ -26,6 +23,6 @@ CREATE TABLE alerts (
     time TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     threshold_id INTEGER NOT NULL,
     message TEXT NOT NULL,
-    active BOOLEAN NOT NULL DEFAULT true,
+    active BOOLEAN NOT NULL DEFAULT true, -- for confirmed alert delivery, we can make this active to false
     FOREIGN KEY (threshold_id) REFERENCES alert_thresholds(id)
 );

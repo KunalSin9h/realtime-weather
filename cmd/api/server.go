@@ -18,10 +18,10 @@ func (c *Config) setUpAndRunServer() error {
 	// Refresh Daily Weather Summary
 
 	// Create Alert Thresholds
-	mux.HandleFunc("POST /alert", c.CreateAlert)
+	mux.HandleFunc("POST /alert", c.createAlert)
 
 	// Delete Alert Thresholds with ALERT ID
-	mux.HandleFunc("DELETE /alert/{id}", c.DeleteAlert)
+	mux.HandleFunc("DELETE /alert/{id}", c.deleteAlert)
 
 	// SERVER
 	server := &http.Server{

@@ -27,8 +27,6 @@ type AlertThreshold struct {
 	MaxHumidity    pgtype.Numeric
 	MinWindSpeed   pgtype.Numeric
 	MaxWindSpeed   pgtype.Numeric
-	OccurLimit     int32
-	OccurCount     int32
 	Active         bool
 }
 

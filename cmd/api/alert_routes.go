@@ -25,7 +25,7 @@ type CreateAlertPayload struct {
 }
 
 // CreateAlert creates a new Alert Threshold entry in the database
-func (c *Config) CreateAlert(w http.ResponseWriter, r *http.Request) {
+func (c *Config) createAlert(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	// ready request payload
@@ -52,10 +52,17 @@ func (c *Config) CreateAlert(w http.ResponseWriter, r *http.Request) {
 		occurLimit = reqPayload.OccurLimit
 	}
 
+	// weather condition id
+	wdId, err := query.GetConditionID(ctx, reqPayload.Condition)
+	if err != nil {
+		sendError(w, err, http.StatusInternalServerError)
+		return
+	}
+
 	err = query.CreateAlertThreshold(ctx, db.CreateAlertThresholdParams{
 		Name:           reqPayload.Name,
 		CityID:         reqPayload.CityID,
-		Condition:      reqPayload.Condition,
+		ConditionID:    pgtype.Int4{Int32: wdId, Valid: true},
 		MinTemperature: reqPayload.MinTemperature,
 		MaxTemperature: reqPayload.MaxTemperature,
 		MinHumidity:    reqPayload.MinHumidity,
@@ -75,9 +82,12 @@ func (c *Config) CreateAlert(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Alert Threshold Created")
 }
 
-func (c *Config) DeleteAlert(w http.ResponseWriter, r *http.Request) {
+// deleteAlert is a API endpoint handler for DELETE /alert/{id}
+func (c *Config) deleteAlert(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
+	// DELETE /alert/3
+	// 3 here is alert id
 	alertId := r.PathValue("id")
 
 	alertIdInt, err := strconv.ParseInt(alertId, 10, 32)

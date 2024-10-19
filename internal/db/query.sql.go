@@ -13,34 +13,125 @@ import (
 
 const addWeatherData = `-- name: AddWeatherData :exec
 INSERT INTO weather_data (
-    time, city_id, temperature, feels_like, humidity, wind_speed, condition_id
+    time, condition_id, city_id, temperature, feels_like, humidity, wind_speed
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, (
-        SELECT id FROM weather_conditions WHERE condition = $7
-    )
+  $1, $2, $3, $4, $5, $6, $7
 )
 `
 
 type AddWeatherDataParams struct {
 	Time        pgtype.Timestamptz
+	ConditionID int32
 	CityID      int32
 	Temperature pgtype.Numeric
 	FeelsLike   pgtype.Numeric
 	Humidity    pgtype.Numeric
 	WindSpeed   pgtype.Numeric
-	Condition   string
 }
 
 func (q *Queries) AddWeatherData(ctx context.Context, arg AddWeatherDataParams) error {
 	_, err := q.db.Exec(ctx, addWeatherData,
 		arg.Time,
+		arg.ConditionID,
 		arg.CityID,
 		arg.Temperature,
 		arg.FeelsLike,
 		arg.Humidity,
 		arg.WindSpeed,
-		arg.Condition,
 	)
+	return err
+}
+
+const checkAlertThreshold = `-- name: CheckAlertThreshold :many
+SELECT id, name, city_id, condition_id, min_temperature, max_temperature, min_humidity, max_humidity, min_wind_speed, max_wind_speed, active FROM alert_thresholds
+WHERE city_id = $1 AND active = true AND (
+    condition_id = $2
+    OR
+    min_temperature >= $3
+    OR
+    max_temperature <= $4
+    OR
+    min_humidity >= $5
+    OR
+    max_humidity <= $6
+    OR
+    min_wind_speed >= $7
+    OR
+    max_wind_speed <= $8
+)
+`
+
+type CheckAlertThresholdParams struct {
+	CityID         int32
+	ConditionID    pgtype.Int4
+	MinTemperature pgtype.Numeric
+	MaxTemperature pgtype.Numeric
+	MinHumidity    pgtype.Numeric
+	MaxHumidity    pgtype.Numeric
+	MinWindSpeed   pgtype.Numeric
+	MaxWindSpeed   pgtype.Numeric
+}
+
+// Give all the alerts that are in action for a given weather data
+func (q *Queries) CheckAlertThreshold(ctx context.Context, arg CheckAlertThresholdParams) ([]AlertThreshold, error) {
+	rows, err := q.db.Query(ctx, checkAlertThreshold,
+		arg.CityID,
+		arg.ConditionID,
+		arg.MinTemperature,
+		arg.MaxTemperature,
+		arg.MinHumidity,
+		arg.MaxHumidity,
+		arg.MinWindSpeed,
+		arg.MaxWindSpeed,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []AlertThreshold
+	for rows.Next() {
+		var i AlertThreshold
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.CityID,
+			&i.ConditionID,
+			&i.MinTemperature,
+			&i.MaxTemperature,
+			&i.MinHumidity,
+			&i.MaxHumidity,
+			&i.MinWindSpeed,
+			&i.MaxWindSpeed,
+			&i.Active,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const createAlert = `-- name: CreateAlert :exec
+INSERT INTO alerts (
+    threshold_id,
+    message
+) VALUES (
+    $1,
+    $2
+)
+`
+
+type CreateAlertParams struct {
+	ThresholdID int32
+	Message     string
+}
+
+// add an entry to alert table for user notification
+func (q *Queries) CreateAlert(ctx context.Context, arg CreateAlertParams) error {
+	_, err := q.db.Exec(ctx, createAlert, arg.ThresholdID, arg.Message)
 	return err
 }
 
@@ -48,14 +139,13 @@ const createAlertThreshold = `-- name: CreateAlertThreshold :exec
 INSERT INTO alert_thresholds (
     name,
     city_id,
+    condition_id,
     min_temperature,
     max_temperature,
     min_humidity,
     max_humidity,
     min_wind_speed,
-    max_wind_speed,
-    occur_limit,
-    condition_id
+    max_wind_speed
 ) VALUES (
     $1,
     $2,
@@ -65,24 +155,20 @@ INSERT INTO alert_thresholds (
     $6,
     $7,
     $8,
-    $9,
-    (
-        SELECT id FROM weather_conditions WHERE condition = $10
-    )
+    $9
 )
 `
 
 type CreateAlertThresholdParams struct {
 	Name           string
 	CityID         int32
+	ConditionID    pgtype.Int4
 	MinTemperature pgtype.Numeric
 	MaxTemperature pgtype.Numeric
 	MinHumidity    pgtype.Numeric
 	MaxHumidity    pgtype.Numeric
 	MinWindSpeed   pgtype.Numeric
 	MaxWindSpeed   pgtype.Numeric
-	OccurLimit     int32
-	Condition      string
 }
 
 // ALERTS
@@ -90,14 +176,13 @@ func (q *Queries) CreateAlertThreshold(ctx context.Context, arg CreateAlertThres
 	_, err := q.db.Exec(ctx, createAlertThreshold,
 		arg.Name,
 		arg.CityID,
+		arg.ConditionID,
 		arg.MinTemperature,
 		arg.MaxTemperature,
 		arg.MinHumidity,
 		arg.MaxHumidity,
 		arg.MinWindSpeed,
 		arg.MaxWindSpeed,
-		arg.OccurLimit,
-		arg.Condition,
 	)
 	return err
 }
@@ -143,10 +228,22 @@ func (q *Queries) GetAllCities(ctx context.Context) ([]City, error) {
 	return items, nil
 }
 
+const getConditionID = `-- name: GetConditionID :one
+SELECT id FROM weather_conditions WHERE condition = $1
+`
+
+func (q *Queries) GetConditionID(ctx context.Context, condition string) (int32, error) {
+	row := q.db.QueryRow(ctx, getConditionID, condition)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
+}
+
 const getTodayWeatherSummary = `-- name: GetTodayWeatherSummary :one
 SELECT get_latest_daily_summary FROM get_latest_daily_summary($1)
 `
 
+// It's a function in migrations folder, is used continuous aggregate feature of timescale
 func (q *Queries) GetTodayWeatherSummary(ctx context.Context, cityIDParam int32) (interface{}, error) {
 	row := q.db.QueryRow(ctx, getTodayWeatherSummary, cityIDParam)
 	var get_latest_daily_summary interface{}

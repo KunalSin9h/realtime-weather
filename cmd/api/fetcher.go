@@ -125,17 +125,32 @@ func fetchWeatherData(ctx context.Context, city *db.City, query *db.Queries) err
 		return err
 	}
 
-	// insert the weather data into db
-	err = query.AddWeatherData(ctx, db.AddWeatherDataParams{
+	// weather_condition-id
+	wdID, err := query.GetConditionID(ctx, weatherData.Weather[0].Main)
+	if err != nil {
+		return err
+	}
+
+	dbData := db.AddWeatherDataParams{
 		Time:        calTimestampWithTZ(weatherData.DT, weatherData.Timezone),
 		CityID:      city.ID,
-		Condition:   weatherData.Weather[0].Main,
+		ConditionID: wdID,
 		Temperature: weatherData.Main.Temp,
 		FeelsLike:   weatherData.Main.FeelsLike,
 		Humidity:    weatherData.Main.Humidity,
 		WindSpeed:   weatherData.Wind.Speed,
-	})
+	}
+
+	// insert the weather data into db
+	err = query.AddWeatherData(ctx, dbData)
+	if err != nil {
+		return err
+	}
+
+	// in background
+	// concurrently check for any alert threshold on this dbData (weather data)
+	go checkThresholds(ctx, dbData, wdID, query)
 
 	slog.Info("Done")
-	return err
+	return nil
 }
