@@ -1,1 +1,6 @@
 .idea
+.env
+
+# Jetbrains Http client
+*.private.env.json
+*.http
