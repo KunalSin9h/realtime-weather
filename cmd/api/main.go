@@ -6,8 +6,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"log"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 )
 
@@ -49,9 +47,7 @@ func init() {
 }
 
 func main() {
-	// Use signals to gracefully shut down all the running go routines
-	// and clear resource
-	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	var app Config
