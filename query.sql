@@ -45,3 +45,6 @@ INSERT INTO alert_thresholds (
         SELECT id FROM weather_conditions WHERE condition = $10
     )
 );
+
+-- name: DeleteAlertThreshold :exec
+UPDATE alert_thresholds SET active = false WHERE id = $1;

@@ -8,6 +8,7 @@ import (
 	"github.com/kunalsin9h/realtime-weather/internal/db"
 	"io"
 	"net/http"
+	"strconv"
 )
 
 type CreateAlertPayload struct {
@@ -75,5 +76,25 @@ func (c *Config) CreateAlert(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Config) DeleteAlert(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
 
+	alertId := r.PathValue("id")
+
+	alertIdInt, err := strconv.ParseInt(alertId, 10, 32)
+	if err != nil {
+		sendError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	query := db.New(c.dbConn)
+
+	err = query.DeleteAlertThreshold(ctx, int32(alertIdInt))
+	if err != nil {
+		sendError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "text/plain")
+	fmt.Fprintf(w, "Alert Threshold Deleted")
 }

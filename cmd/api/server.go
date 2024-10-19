@@ -20,8 +20,8 @@ func (c *Config) setUpAndRunServer() error {
 	// Create Alert Thresholds
 	mux.HandleFunc("POST /alert", c.CreateAlert)
 
-	// Delete Alert Thresholds
-	mux.HandleFunc("DELETE /alert", c.DeleteAlert)
+	// Delete Alert Thresholds with ALERT ID
+	mux.HandleFunc("DELETE /alert/{id}", c.DeleteAlert)
 
 	// SERVER
 	server := &http.Server{

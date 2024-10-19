@@ -102,6 +102,15 @@ func (q *Queries) CreateAlertThreshold(ctx context.Context, arg CreateAlertThres
 	return err
 }
 
+const deleteAlertThreshold = `-- name: DeleteAlertThreshold :exec
+UPDATE alert_thresholds SET active = false WHERE id = $1
+`
+
+func (q *Queries) DeleteAlertThreshold(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteAlertThreshold, id)
+	return err
+}
+
 const getAllCities = `-- name: GetAllCities :many
 
 SELECT id, name, latitude, longitude FROM cities
