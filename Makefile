@@ -1,2 +1,2 @@
 db:
-	bash ./scripts/rundb.sh
+	bash ./rundb.sh

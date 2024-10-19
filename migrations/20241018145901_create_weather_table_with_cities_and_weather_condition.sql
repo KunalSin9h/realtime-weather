@@ -26,5 +26,8 @@ CREATE TABLE weather_data (
     FOREIGN KEY (condition_id) REFERENCES weather_conditions(id)
 );
 
+-- Index on city_id and time for weather_data
+CREATE INDEX ON weather_data (city_id, time DESC);
+
 -- Convert weather_data table to a timescaleDB hypertable
 SELECT create_hypertable('weather_data', 'time');
