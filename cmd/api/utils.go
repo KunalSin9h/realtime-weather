@@ -3,6 +3,8 @@ package main
 import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/kunalsin9h/realtime-weather/internal/db"
+	"log/slog"
+	"os"
 	"time"
 )
 
@@ -31,4 +33,10 @@ func getFloatLatLon(city *db.City) (float64, float64, error) {
 	}
 
 	return latitude.Float64, longitude.Float64, nil
+}
+
+func crashWithError(msg string, err error) {
+	slog.Warn(msg)
+	slog.Error(err.Error())
+	os.Exit(1)
 }

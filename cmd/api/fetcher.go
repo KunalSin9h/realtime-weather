@@ -14,7 +14,7 @@ import (
 
 // fetcher works concurrently with main go route.
 // it will continuously fetch the API and update the data on the given interval
-func (c *Config) dataSourceFetcher(ctx context.Context, apiKey string) {
+func (c *Config) dataSourceFetcher(ctx context.Context) {
 	slog.Info("Started fetching weather data...")
 
 	ticker := time.NewTicker(c.interval)
@@ -23,7 +23,7 @@ func (c *Config) dataSourceFetcher(ctx context.Context, apiKey string) {
 	query := db.New(c.dbConn)
 
 	// Run this upfront
-	err := c.findAllCitiesAndGetWeather(ctx, query, apiKey)
+	err := c.findAllCitiesAndGetWeather(ctx, query)
 	if err != nil {
 		slog.Error(err.Error())
 	}
@@ -33,7 +33,7 @@ func (c *Config) dataSourceFetcher(ctx context.Context, apiKey string) {
 		select {
 		case <-ticker.C:
 			// Now run it on interval
-			err := c.findAllCitiesAndGetWeather(ctx, query, apiKey)
+			err := c.findAllCitiesAndGetWeather(ctx, query)
 			if err != nil {
 				slog.Error(err.Error())
 			}
@@ -46,7 +46,7 @@ func (c *Config) dataSourceFetcher(ctx context.Context, apiKey string) {
 	}
 }
 
-func (c *Config) findAllCitiesAndGetWeather(ctx context.Context, query *db.Queries, apiKey string) error {
+func (c *Config) findAllCitiesAndGetWeather(ctx context.Context, query *db.Queries) error {
 	// fetch all weather data for all city again
 	// get all the cities
 	cities, err := query.GetAllCities(ctx)
@@ -57,7 +57,7 @@ func (c *Config) findAllCitiesAndGetWeather(ctx context.Context, query *db.Queri
 
 	// For all cities
 	for _, city := range cities {
-		err = fetchWeatherData(ctx, &city, query, apiKey)
+		err = fetchWeatherData(ctx, &city, query)
 		if err != nil {
 			slog.Error(err.Error())
 		}
@@ -88,7 +88,7 @@ type WindCondition struct {
 	Speed pgtype.Numeric `json:"speed"`
 }
 
-func fetchWeatherData(ctx context.Context, city *db.City, query *db.Queries, apiKey string) error {
+func fetchWeatherData(ctx context.Context, city *db.City, query *db.Queries) error {
 	slog.Info(fmt.Sprintf("Fetching weather data for city %s", city.Name))
 
 	lat, lon, err := getFloatLatLon(city)
@@ -97,7 +97,7 @@ func fetchWeatherData(ctx context.Context, city *db.City, query *db.Queries, api
 	}
 
 	apiUrl := fmt.Sprintf("https://api.openweathermap.org/data/2.5/weather?lat=%v&lon=%v&appid=%s&units=metric",
-		lat, lon, apiKey)
+		lat, lon, OPEN_WEATHER_API_KEY)
 
 	resp, err := http.Get(apiUrl)
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/jackc/pgx/v5"
-	"log/slog"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -75,11 +75,9 @@ func main() {
 	app.dbConn = db
 
 	// concurrently fetch data at the app.interval interval
-	app.dataSourceFetcher(ctx, OPEN_WEATHER_API_KEY)
-}
+	go app.dataSourceFetcher(ctx)
 
-func crashWithError(msg string, err error) {
-	slog.Warn(msg)
-	slog.Error(err.Error())
-	os.Exit(1)
+	// Setup and Run server
+	// This will run Server on HOST:PORT
+	log.Fatal(app.setUpAndRunServer())
 }
