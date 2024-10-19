@@ -13,3 +13,9 @@ cargo install sqlx-cli --no-default-features --features postgres
 # for psql
 sudo apt-get install -y postgresql-client
 ```
+
+Design Choices
+
+1. Use of `CURRENT_TIMESAMP` as `DEFAULT` value in `time` colum.
+
+To simply the applicaion layer login

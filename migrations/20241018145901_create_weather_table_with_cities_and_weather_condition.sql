@@ -1,7 +1,9 @@
 -- Create the cities table
 CREATE TABLE cities (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL
+    name VARCHAR(100) NOT NULL,
+    latitude DECIMAL(9,6) NOT NULL,
+    longitude DECIMAL(9,6) NOT NULL
 );
 
 -- Create the weather_conditions table
