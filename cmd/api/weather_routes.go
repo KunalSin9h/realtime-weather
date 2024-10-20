@@ -26,7 +26,19 @@ func (c *Config) getDailyWeatherSummary(w http.ResponseWriter, r *http.Request) 
 	// We are not using sqlc ORM, its giving some problem with get_latest_daily_summary function's return table type.
 	// TODO: open issue in the sqlc project
 	// so we are doing row sql query with pgx
-	err = c.dbConn.QueryRow(r.Context(), "SELECT * FROM get_latest_daily_summary($1)", cityIdInt).Scan(
+	err = c.dbConn.QueryRow(r.Context(), `SELECT 
+    	date,
+		avg_temperature,
+		max_temperature,
+		min_temperature,
+		avg_humidity,
+		max_humidity,
+		min_humidity,
+		avg_wind_speed,
+		max_wind_speed,
+		min_wind_speed,
+		dominant_condition
+	FROM get_latest_daily_summary($1)`, cityIdInt).Scan(
 		&data.Date,
 		&data.AvgTemperature,
 		&data.MaxTemperature,
@@ -75,14 +87,14 @@ func (c *Config) refreshDailySummaryViewTable(w http.ResponseWriter, r *http.Req
 
 type WeatherSummaryData struct {
 	Date              time.Time `json:"date"`
-	AvgTemperature    float64
-	MaxTemperature    float64
-	MinTemperature    float64
-	AvgHumidity       float64
-	MaxHumidity       float64
-	MinHumidity       float64
-	AvgWindSpeed      float64
-	MaxWindSpeed      float64
-	MinWindSpeed      float64
-	DominantCondition string
+	AvgTemperature    float64   `json:"avg_temperature"`
+	MaxTemperature    float64   `json:"max_temperature"`
+	MinTemperature    float64   `json:"min_temperature"`
+	AvgHumidity       float64   `json:"avg_humidity"`
+	MaxHumidity       float64   `json:"max_humidity"`
+	MinHumidity       float64   `json:"min_humidity"`
+	AvgWindSpeed      float64   `json:"avg_wind_speed"`
+	MaxWindSpeed      float64   `json:"max_wind_speed"`
+	MinWindSpeed      float64   `json:"min_wind_speed"`
+	DominantCondition string    `json:"dominant_condition"`
 }
