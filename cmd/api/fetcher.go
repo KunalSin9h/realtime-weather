@@ -17,7 +17,7 @@ import (
 func (c *Config) dataSourceFetcher(ctx context.Context) {
 	slog.Info("Started fetching weather data...")
 
-	ticker := time.NewTicker(c.interval)
+	ticker := time.NewTicker(c.UserPref.Interval)
 	defer ticker.Stop()
 
 	query := db.New(c.dbConn)
@@ -30,6 +30,7 @@ func (c *Config) dataSourceFetcher(ctx context.Context) {
 
 	// Infinite loop: continuously fetch latest weather data for all cities
 	for {
+		fmt.Println(c.UserPref)
 		select {
 		case <-ticker.C:
 			// Now run it on interval
@@ -42,7 +43,7 @@ func (c *Config) dataSourceFetcher(ctx context.Context) {
 		}
 
 		// Keep updated the interval, user can change this
-		ticker.Reset(c.interval)
+		ticker.Reset(c.UserPref.Interval)
 	}
 }
 

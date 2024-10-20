@@ -7,12 +7,10 @@ import (
 	"github.com/joho/godotenv"
 	"log"
 	"os"
-	"time"
 )
 
 type Config struct {
 	dbConn   *pgx.Conn
-	interval time.Duration
 	UserPref *UserPreference
 }
 
