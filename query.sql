@@ -75,3 +75,13 @@ INSERT INTO alerts (
     $1,
     $2
 );
+
+-- Get all the alerts in the alerts table, make then active = false (means they are processed)
+-- name: DeactivateAndGetAlerts :many
+UPDATE alerts al
+SET active = false
+FROM alert_thresholds th
+WHERE al.threshold_id = th.id
+  AND al.active = true
+  AND th.active = true
+RETURNING th.id as threshold_id, th.name as name, al.time as time, al.message as message;

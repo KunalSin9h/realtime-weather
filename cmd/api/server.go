@@ -17,6 +17,12 @@ func (c *Config) setUpAndRunServer() error {
 	// Get Daily Weather Summary
 	// Refresh Daily Weather Summary
 
+	// ALERTS
+
+	// Send alerts on API Pooling
+	// alerts are created
+	mux.HandleFunc("GET /alerts", c.sendAlert)
+
 	// Create Alert Thresholds
 	mux.HandleFunc("POST /alert", c.createAlert)
 

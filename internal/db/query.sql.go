@@ -187,6 +187,49 @@ func (q *Queries) CreateAlertThreshold(ctx context.Context, arg CreateAlertThres
 	return err
 }
 
+const deactivateAndGetAlerts = `-- name: DeactivateAndGetAlerts :many
+UPDATE alerts al
+SET active = false
+FROM alert_thresholds th
+WHERE al.threshold_id = th.id
+  AND al.active = true
+  AND th.active = true
+RETURNING th.id as threshold_id, th.name as name, al.time as time, al.message as message
+`
+
+type DeactivateAndGetAlertsRow struct {
+	ThresholdID int32
+	Name        string
+	Time        pgtype.Timestamptz
+	Message     string
+}
+
+// Get all the alerts in the alerts table, make then active = false (means they are processed)
+func (q *Queries) DeactivateAndGetAlerts(ctx context.Context) ([]DeactivateAndGetAlertsRow, error) {
+	rows, err := q.db.Query(ctx, deactivateAndGetAlerts)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []DeactivateAndGetAlertsRow
+	for rows.Next() {
+		var i DeactivateAndGetAlertsRow
+		if err := rows.Scan(
+			&i.ThresholdID,
+			&i.Name,
+			&i.Time,
+			&i.Message,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const deleteAlertThreshold = `-- name: DeleteAlertThreshold :exec
 UPDATE alert_thresholds SET active = false WHERE id = $1
 `
