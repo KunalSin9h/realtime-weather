@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -26,8 +25,6 @@ type CreateAlertPayload struct {
 
 // CreateAlert creates a new Alert Threshold entry in the database
 func (c *Config) createAlert(w http.ResponseWriter, r *http.Request) {
-	ctx := context.Background()
-
 	// ready request payload
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -50,14 +47,14 @@ func (c *Config) createAlert(w http.ResponseWriter, r *http.Request) {
 	// weather condition id
 	// if there is no condition, that is we don't have alert on condition
 	// it ok
-	wdId, err := query.GetConditionID(ctx, reqPayload.Condition)
+	wdId, err := query.GetConditionID(r.Context(), reqPayload.Condition)
 	if err == nil {
 		// if no error: that means we have condition
 		weadCondId.Int32 = wdId
 		weadCondId.Valid = true
 	}
 
-	err = query.CreateAlertThreshold(ctx, db.CreateAlertThresholdParams{
+	err = query.CreateAlertThreshold(r.Context(), db.CreateAlertThresholdParams{
 		Name:           reqPayload.Name,
 		CityID:         reqPayload.CityID,
 		ConditionID:    weadCondId,
@@ -81,11 +78,9 @@ func (c *Config) createAlert(w http.ResponseWriter, r *http.Request) {
 
 // deleteAlert is a API endpoint handler for DELETE /alert/{id}
 func (c *Config) deleteAlert(w http.ResponseWriter, r *http.Request) {
-	ctx := context.Background()
-
 	// DELETE /alert/3
 	// 3 here is alert id
-	alertId := r.PathValue("id")
+	alertId := r.PathValue("alert_threshold_id")
 
 	alertIdInt, err := strconv.ParseInt(alertId, 10, 32)
 	if err != nil {
@@ -95,7 +90,7 @@ func (c *Config) deleteAlert(w http.ResponseWriter, r *http.Request) {
 
 	query := db.New(c.dbConn)
 
-	err = query.DeleteAlertThreshold(ctx, int32(alertIdInt))
+	err = query.DeleteAlertThreshold(r.Context(), int32(alertIdInt))
 	if err != nil {
 		sendError(w, err, http.StatusInternalServerError)
 		return

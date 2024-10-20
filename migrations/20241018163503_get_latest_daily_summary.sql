@@ -1,6 +1,5 @@
--- A function to get latest daily summary for a city
-CREATE OR REPLACE FUNCTION get_latest_daily_summary(city_id_param INTEGER)
-RETURNS TABLE (
+-- Daily summary type, used by get_latest_daily_summary
+CREATE TYPE daily_summary AS (
     date DATE,
     avg_temperature DECIMAL(5,2),
     max_temperature DECIMAL(5,2),
@@ -11,22 +10,29 @@ RETURNS TABLE (
     avg_wind_speed DECIMAL(5,2),
     max_wind_speed DECIMAL(5,2),
     min_wind_speed DECIMAL(5,2),
-    dominant_condition_id INTEGER
-) AS $$
+    dominant_condition VARCHAR(50)
+);
+
+-- A function to get latest daily summary for a city
+CREATE OR REPLACE FUNCTION get_latest_daily_summary(city_id_param INTEGER)
+RETURNS SETOF daily_summary AS $$
 BEGIN
 RETURN QUERY
 SELECT
     bucket::DATE AS date,
-        avg_temperature,
-        max_temperature,
-        min_temperature,
-        avg_humidity,
-        max_humidity,
-        min_humidity,
-        avg_wind_speed,
-        max_wind_speed,
-        min_wind_speed,
-        dominant_condition_id
+    daily_weather_summary_view.avg_temperature,
+    daily_weather_summary_view.max_temperature,
+    daily_weather_summary_view.min_temperature,
+    daily_weather_summary_view.avg_humidity,
+    daily_weather_summary_view.max_humidity,
+    daily_weather_summary_view.min_humidity,
+    daily_weather_summary_view.avg_wind_speed,
+    daily_weather_summary_view.max_wind_speed,
+    daily_weather_summary_view.min_wind_speed,
+    (
+        SELECT condition FROM weather_conditions
+        WHERE id = daily_weather_summary_view.dominant_condition_id
+    )
 FROM daily_weather_summary_view
 WHERE city_id = city_id_param
 ORDER BY bucket DESC

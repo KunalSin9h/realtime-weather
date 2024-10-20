@@ -4,7 +4,7 @@
 CREATE MATERIALIZED VIEW daily_weather_summary_view
 WITH (timescaledb.continuous) AS -- for timescaleDB to manage this as a continuous aggregate.
 SELECT
-    time_bucket('1 day', time) AS bucket,
+    time_bucket(INTERVAL '1 day', time) AS bucket,
     city_id,
     AVG(temperature)::DECIMAL(5,2) AS avg_temperature,
     MAX(temperature)::DECIMAL(5,2) AS max_temperature,

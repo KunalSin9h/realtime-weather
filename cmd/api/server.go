@@ -12,10 +12,16 @@ func (c *Config) setUpAndRunServer() error {
 
 	// GET /
 	// Serve Static Frontend Dashboard
-	mux.Handle("/", http.FileServer(http.Dir("./ui/dist/")))
+	mux.Handle("GET /", http.FileServer(http.Dir("./ui/dist/")))
 
-	// Get Daily Weather Summary
+	// Get Daily Weather Summary for City with city_id
+	mux.HandleFunc("GET /summary/{city_id}", c.getDailyWeatherSummary)
+
 	// Refresh Daily Weather Summary
+	mux.HandleFunc("POST /summary/refresh", c.refreshDailySummaryViewTable)
+
+	// change user preference
+	// temperature
 
 	// ALERTS
 
@@ -27,7 +33,7 @@ func (c *Config) setUpAndRunServer() error {
 	mux.HandleFunc("POST /alert", c.createAlert)
 
 	// Delete Alert Thresholds with ALERT ID
-	mux.HandleFunc("DELETE /alert/{id}", c.deleteAlert)
+	mux.HandleFunc("DELETE /alert/{alert_threshold_id}", c.deleteAlert)
 
 	// SERVER
 	server := &http.Server{

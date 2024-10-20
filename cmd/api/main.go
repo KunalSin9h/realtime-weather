@@ -18,7 +18,7 @@ type Config struct {
 var (
 	PORT                 = "5000"
 	HOST                 = "0.0.0.0"
-	INTERVAL             = "3m" // time interval for data fetching from source
+	INTERVAL             = "1m" // time interval for data fetching from source
 	OPEN_WEATHER_API_KEY = ""
 	TIMESCALE            = "postgresql://admin:admin@localhost:5432/weather?sslmode=disable"
 )

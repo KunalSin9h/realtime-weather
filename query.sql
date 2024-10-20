@@ -3,7 +3,7 @@ SELECT id FROM weather_conditions WHERE condition = $1;
 
 -- name: AddWeatherData :exec
 INSERT INTO weather_data (
-    time, condition_id, city_id, temperature, feels_like, humidity, wind_speed
+  time, condition_id, city_id, temperature, feels_like, humidity, wind_speed
 ) VALUES (
   $1, $2, $3, $4, $5, $6, $7
 );
@@ -13,8 +13,8 @@ INSERT INTO weather_data (
 SELECT * FROM get_latest_daily_summary($1);
 
 -- name: RefreshDailyWeatherSummary :exec
-CALL refresh_continuous_aggregate('daily_weather_summary_view', localtimestamp - INTERVAL '1 hour', localtimestamp);
--- Manually Refresh the daily_weather_summary_view of past 1 hour
+CALL refresh_continuous_aggregate('daily_weather_summary_view', NULL, NULL);
+-- Manually Refresh the daily_weather_summary_view table
 
 -- CITIES
 -- name: GetAllCities :many
