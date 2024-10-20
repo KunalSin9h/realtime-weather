@@ -96,7 +96,7 @@ func fetchWeatherData(ctx context.Context, city *db.City, query *db.Queries) err
 		return err
 	}
 
-	apiUrl := fmt.Sprintf("https://api.openweathermap.org/data/2.5/weather?lat=%v&lon=%v&appid=%s&units=metric",
+	apiUrl := fmt.Sprintf("https://api.openweathermap.org/data/2.5/weather?lat=%v&lon=%v&appid=%s",
 		lat, lon, OPEN_WEATHER_API_KEY)
 
 	resp, err := http.Get(apiUrl)

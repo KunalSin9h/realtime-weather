@@ -12,6 +12,7 @@ import (
 type Config struct {
 	dbConn   *pgx.Conn
 	interval time.Duration
+	UserPref *UserPreference
 }
 
 var (
@@ -61,6 +62,11 @@ func main() {
 	// set the interval to application config
 	app.interval = interval
 
+	// Set User preference
+	app.UserPref = &UserPreference{
+		TempUnit: Celsius, // by default use Celsius for Temperature Unit
+	}
+
 	db, err := setupTimescaleDb(ctx, TIMESCALE)
 	if err != nil {
 		crashWithError("Failed to connect to database", err)
@@ -72,12 +78,6 @@ func main() {
 
 	// concurrently fetch data at the app.interval interval
 	go app.dataSourceFetcher(ctx)
-
-	// emails and websockets (SSE) notification
-	// concurrently get the alerts form alerts table and send them
-	// In queue like fashion
-	// see blog (my own): https://kunalsin9h.com/blog/potgres-task-queue
-	// go sendAlerts(ctx)
 
 	// Setup and Run server
 	// This will run Server on HOST:PORT
