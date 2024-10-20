@@ -46,30 +46,27 @@ func (c *Config) createAlert(w http.ResponseWriter, r *http.Request) {
 
 	query := db.New(c.dbConn)
 
-	// occurLimit it limit, on how many times this condition need to occur before alerting
-	occurLimit := int32(1) // default
-	if reqPayload.OccurLimit > 0 {
-		occurLimit = reqPayload.OccurLimit
-	}
-
+	weadCondId := pgtype.Int4{Valid: false, Int32: 0}
 	// weather condition id
+	// if there is no condition, that is we don't have alert on condition
+	// it ok
 	wdId, err := query.GetConditionID(ctx, reqPayload.Condition)
-	if err != nil {
-		sendError(w, err, http.StatusInternalServerError)
-		return
+	if err == nil {
+		// if no error: that means we have condition
+		weadCondId.Int32 = wdId
+		weadCondId.Valid = true
 	}
 
 	err = query.CreateAlertThreshold(ctx, db.CreateAlertThresholdParams{
 		Name:           reqPayload.Name,
 		CityID:         reqPayload.CityID,
-		ConditionID:    pgtype.Int4{Int32: wdId, Valid: true},
+		ConditionID:    weadCondId,
 		MinTemperature: reqPayload.MinTemperature,
 		MaxTemperature: reqPayload.MaxTemperature,
 		MinHumidity:    reqPayload.MinHumidity,
 		MaxHumidity:    reqPayload.MaxHumidity,
 		MinWindSpeed:   reqPayload.MinWindSpeed,
 		MaxWindSpeed:   reqPayload.MaxWindSpeed,
-		OccurLimit:     occurLimit,
 	})
 
 	if err != nil {

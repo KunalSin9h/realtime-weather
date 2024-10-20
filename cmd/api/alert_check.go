@@ -14,6 +14,7 @@ import (
 // it is used in fetcher.go
 // after every new data entry
 func checkThresholds(ctx context.Context, weatherData db.AddWeatherDataParams, conditionID int32, query *db.Queries) {
+	slog.Info(fmt.Sprintf("checking for alert on city"))
 	// alert threshold that might be applicable for this weatherData
 	alertThs, err := query.CheckAlertThreshold(ctx, db.CheckAlertThresholdParams{
 		CityID:         weatherData.CityID,
@@ -25,6 +26,8 @@ func checkThresholds(ctx context.Context, weatherData db.AddWeatherDataParams, c
 		MinWindSpeed:   weatherData.WindSpeed,
 		MaxWindSpeed:   weatherData.WindSpeed,
 	})
+
+	slog.Info(fmt.Sprintf("Found %d alert applicable for this city", len(alertThs)))
 
 	if err != nil {
 		slog.Warn("Failed to find all alert thresholds")
@@ -45,6 +48,8 @@ func checkThresholds(ctx context.Context, weatherData db.AddWeatherDataParams, c
 			slog.Error(err.Error())
 			return
 		}
+
+		slog.Info("Created alert!")
 	}
 }
 
@@ -53,22 +58,27 @@ func generateAlertMessage(alert db.AlertThreshold) string {
 	// We are doing a hack, to reduce db query and any other operation
 	// by just seeing "On what point we have set the alert"
 	// and if there is alert, then we can say "that the only point that passes threshold"
+
+	msg := "Alert exceeds "
+
 	switch {
 	case alert.MaxTemperature.Valid:
-		return fmt.Sprint("Alert exceeds max temperature")
+		msg += "max temperature"
 	case alert.MinTemperature.Valid:
-		return fmt.Sprint("Alert exceed min temperature")
+		msg += "min temperature"
 	case alert.MinHumidity.Valid:
-		return fmt.Sprint("Alert exceed min humidity")
+		msg += "min humidity"
 	case alert.MaxHumidity.Valid:
-		return fmt.Sprint("Alert exceed max humidity")
+		msg += "max humidity"
 	case alert.MinWindSpeed.Valid:
-		return fmt.Sprint("Alert exceed min wind speed")
+		msg += "min wind speed"
 	case alert.MaxWindSpeed.Valid:
-		return fmt.Sprint("Alert exceed max wind speed")
+		msg += "max wind speed"
 	case alert.ConditionID.Valid:
-		return fmt.Sprint("Alert exceed condition for weather")
+		msg += "condition for weather"
 	default:
-		return "Unknown alert occur"
+		msg = "Unknown alert occur"
 	}
+
+	return msg
 }
