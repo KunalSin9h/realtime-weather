@@ -57,6 +57,13 @@ func (c *Config) getDailyWeatherSummary(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// convert kelvin to Celsius according to User preference
+	if c.UserPref.TempUnit == Celsius {
+		data.AvgTemperature = convertToCelsius(data.AvgTemperature)
+		data.MaxTemperature = convertToCelsius(data.MaxTemperature)
+		data.MinTemperature = convertToCelsius(data.MinTemperature)
+	}
+
 	respData, err := json.Marshal(data)
 	if err != nil {
 		sendError(w, err, http.StatusInternalServerError)

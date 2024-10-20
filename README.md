@@ -27,3 +27,6 @@ sqlx database create
 # sqlx migrate add create_subscription_table -- On the shell to create migration file
 sqlx migrate run
 ```
+
+Kelin in DB
+return type is kelvin vs celsius

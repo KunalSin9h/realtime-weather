@@ -3,4 +3,5 @@
 
 # Jetbrains Http client
 *.private.env.json
+*.env.json
 *.http

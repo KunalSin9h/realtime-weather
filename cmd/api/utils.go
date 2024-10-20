@@ -7,6 +7,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/kunalsin9h/realtime-weather/internal/db"
 	"log/slog"
+	"math"
 	"net/http"
 	"os"
 	"time"
@@ -54,4 +55,9 @@ func sendError(w http.ResponseWriter, err error, code ...int) {
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	fmt.Fprintln(w, err.Error())
+}
+
+func convertToCelsius(kelvin float64) float64 {
+	return math.Round((kelvin-273.15)*1000) / 1000
+	// rounding to 2 decimal places
 }

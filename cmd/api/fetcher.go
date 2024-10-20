@@ -30,7 +30,6 @@ func (c *Config) dataSourceFetcher(ctx context.Context) {
 
 	// Infinite loop: continuously fetch latest weather data for all cities
 	for {
-		fmt.Println(c.UserPref)
 		select {
 		case <-ticker.C:
 			// Now run it on interval
