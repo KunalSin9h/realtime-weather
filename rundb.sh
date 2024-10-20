@@ -2,12 +2,6 @@
 
 set -eox pipefail
 
-# Check if the psql client is install on the system
-if ! [ -x "$(command -v psql)" ]; then
-    echo >&2 "Error: psql is not installed."
-    exit 1
-fi
-
 # Check if the sqlx-cli is install on the system
 if ! [ -x "$(command -v sqlx)" ]; then
     echo >&2 'Error: sqlx is not installed.'
@@ -40,13 +34,6 @@ docker run \
     postgres -N 1000
     # ^^^^^^^^^^^^^ Increased maximum number of connections for testing purpose
 fi
-
-# Keep pinging Postgres until it's ready to accept commands
-export PGPASSWORD="${DB_PASSWORD}"
-until psql -h "127.0.0.1" -U  "${DB_USER}" -p "${DB_PORT}" -d "postgres" -c "\q"; do
-    >&2 echo "TimescaleDB is still unavailable - sleeping"
-    sleep 2
-done
 
 >&2 echo "TimescaleDB is up and running on port ${DB_PORT}"
 
