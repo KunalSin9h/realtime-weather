@@ -19,3 +19,11 @@ Design Choices
 1. Use of `CURRENT_TIMESAMP` as `DEFAULT` value in `time` colum.
 
 To simply the applicaion layer login
+
+```bash
+#run migration
+
+sqlx database create
+# sqlx migrate add create_subscription_table -- On the shell to create migration file
+sqlx migrate run
+```

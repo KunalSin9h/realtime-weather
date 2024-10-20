@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/jackc/pgx/v5"
+	"github.com/joho/godotenv"
 	"log"
 	"os"
 	"time"
@@ -18,22 +19,22 @@ type Config struct {
 var (
 	PORT                 = "5000"
 	HOST                 = "0.0.0.0"
-	INTERVAL             = "1m" // time interval for data fetching from source
 	OPEN_WEATHER_API_KEY = ""
 	TIMESCALE            = "postgresql://admin:admin@localhost:5432/weather?sslmode=disable"
 )
 
 func init() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	if os.Getenv("PORT") != "" {
 		PORT = os.Getenv("PORT")
 	}
 
 	if os.Getenv("HOST") != "" {
 		HOST = os.Getenv("HOST")
-	}
-
-	if os.Getenv("INTERVAL") != "" {
-		INTERVAL = os.Getenv("INTERVAL")
 	}
 
 	if os.Getenv("OPEN_WEATHER_API_KEY") != "" {
@@ -52,20 +53,7 @@ func main() {
 	defer cancel()
 
 	var app Config
-
-	// parse interval from env
-	interval, err := time.ParseDuration(INTERVAL)
-	if err != nil {
-		crashWithError("Invalid interval format", err)
-	}
-
-	// set the interval to application config
-	app.interval = interval
-
-	// Set User preference
-	app.UserPref = &UserPreference{
-		TempUnit: Celsius, // by default use Celsius for Temperature Unit
-	}
+	app.UserPref = getDefaultUserPreference()
 
 	db, err := setupTimescaleDb(ctx, TIMESCALE)
 	if err != nil {

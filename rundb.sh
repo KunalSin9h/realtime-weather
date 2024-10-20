@@ -50,9 +50,6 @@ done
 
 >&2 echo "TimescaleDB is up and running on port ${DB_PORT}"
 
-export DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@127.0.0.1:${DB_PORT}/${DB_NAME}
-sqlx database create
-# sqlx migrate add create_subscription_table -- On the shell to create migration file
-sqlx migrate run
-
->&2 echo "Timescale has been migrated, ready to go!"
+echo ""
+echo postgres://${DB_USER}:${DB_PASSWORD}@127.0.0.1:${DB_PORT}/${DB_NAME}
+echo ""
