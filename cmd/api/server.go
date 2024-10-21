@@ -18,7 +18,7 @@ func (c *Config) setUpAndRunServer() error {
 
 	// GET /cities
 	// Get all the cities
-	mux.HandleFunc("GET /cities", c.getAllCities)
+	mux.HandleFunc("GET /cities", enableCors(c.getAllCities))
 
 	// Get Daily Weather Summary for City with city_id
 	mux.HandleFunc("GET /summary/{city_id}", c.getDailyWeatherSummary)
@@ -60,7 +60,22 @@ func (c *Config) setUpAndRunServer() error {
 	return server.ListenAndServe()
 }
 
-// getAllCities give list of citie in the database
+func enableCors(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Vite app
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5174")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+// getAllCities give list of cities in the database
 func (c *Config) getAllCities(w http.ResponseWriter, r *http.Request) {
 	query := db.New(c.dbConn)
 	cities, err := query.GetAllCities(r.Context())
