@@ -9,16 +9,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
 export default function Settings() {
   const [temperatureUnit, setTemperatureUnit] = useState('celsius');
   const [fetchInterval, setFetchInterval] = useState(3);
-
+/*
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['user_preference'],
     queryFn: async () => {
-      const resp = await fetch("http://localhost:5000/preference");
+      const resp = await fetch("/api/preference");
       if (!resp.ok || resp.status !== 200) {
         throw new Error("API return with non 200")
       }
@@ -41,6 +42,7 @@ export default function Settings() {
   if (error) {
     return <p className="text-gray-400">Got Error: {error.message}</p>
   }
+    */
 
   return (
     <div className="p-4 max-w-md">
@@ -49,7 +51,10 @@ export default function Settings() {
         <label htmlFor="temperatureUnit">
           Temperature Unit
         </label>
-        <Select value={temperatureUnit} onValueChange={setTemperatureUnit}>
+        <Select value={temperatureUnit} onValueChange={(value) => {
+          console.log(value);
+          setTemperatureUnit(value);
+        }}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select unit" />
           </SelectTrigger>
@@ -74,8 +79,25 @@ export default function Settings() {
           className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
         />
       </div>
-      <Button onClick={() => {
-        
+      <Button onClick={async (e) => {
+        e.preventDefault();
+        const resp = await fetch("/api/preference", {
+          method: "post",
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            temp_unit: temperatureUnit,
+            interval: `${fetchInterval}m0s`
+          })
+        })
+
+        // check if status is 200 if not show error
+        if (resp.status !== 200) {
+          toast.error("Failed to change settings.")
+        } else {
+          toast.success("Done!")
+        }
       }}>
         Save
       </Button>

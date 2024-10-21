@@ -28,7 +28,7 @@ export function AppSidebar() {
   const { data, isLoading } = useQuery({
     queryKey: ['cities'],
     queryFn: async () => {
-      const resp = await fetch("http://localhost:5000/cities");
+      const resp = await fetch("/api/cities");
       if (!resp.ok) {
         return null;
       }
@@ -63,10 +63,12 @@ export function AppSidebar() {
                     {cities.length > 0 && cities.map((city, index) => (
                 <SidebarMenuSubItem key={index}>
                   <SidebarMenuSubButton asChild>
-                    <a href={`city&city_id=${city.ID}`}>
+                    <div className="cursor-pointer" onClick={(e) => {
+                      e.preventDefault();
+                      window.location.replace(`/city/${city.Name}/${city.ID}`);
+                    }}>
                       <span>{city.Name}</span>
-                    </a>
-                    
+                    </div>
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
               ))}

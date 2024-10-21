@@ -12,19 +12,29 @@ func (c *Config) setUpAndRunServer() error {
 	slog.Info("Starting server...")
 	mux := http.NewServeMux()
 
-	// GET /
 	// Serve Static Frontend Dashboard
+	// ALL UI ROUTES
+	// Since, the frontend also served by GO backend, we really need to do this mess. this is how it works :)
 	mux.Handle("GET /", http.FileServer(http.Dir("./ui/dist/")))
+	mux.HandleFunc("GET /settings", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./ui/dist/index.html")
+	})
+	mux.HandleFunc("GET /city/{city_name}/{city_id}", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./ui/dist/index.html")
+	})
+
+	///***********************************************************************
+	// ALL THINGS API
 
 	// GET /cities
 	// Get all the cities
-	mux.HandleFunc("GET /cities", enableCorsAnd(c.getAllCities))
+	mux.HandleFunc("GET /api/cities", enableCorsAnd(c.getAllCities))
 
 	// Get Daily Weather Summary for City with city_id
-	mux.HandleFunc("GET /summary/{city_id}", c.getDailyWeatherSummary)
+	mux.HandleFunc("GET /api/cities/summary/{city_id}", enableCorsAnd(c.getDailyWeatherSummary))
 
 	// Refresh Daily Weather Summary
-	mux.HandleFunc("POST /summary/refresh", c.refreshDailySummaryViewTable)
+	mux.HandleFunc("POST /api/cities/summary/refresh", enableCorsAnd(c.refreshDailySummaryViewTable))
 
 	// change user preference
 	// temperature
@@ -33,22 +43,19 @@ func (c *Config) setUpAndRunServer() error {
 
 	// Send alerts on API Pooling
 	// alerts are created
-	mux.HandleFunc("GET /alerts", c.sendAlert)
+	mux.HandleFunc("GET /api/alerts", enableCorsAnd(c.sendAlert))
 
 	// Create Alert Thresholds
-	mux.HandleFunc("POST /alert", c.createAlert)
+	mux.HandleFunc("POST /api/alert", enableCorsAnd(c.createAlert))
 
 	// Delete Alert Thresholds with ALERT ID
-	mux.HandleFunc("DELETE /alert/{alert_threshold_id}", c.deleteAlert)
+	mux.HandleFunc("DELETE /api/alert/{alert_threshold_id}", enableCorsAnd(c.deleteAlert))
 
 	// User Preference
-	// Since there are only two user preferences, I am doing simple way.
-	// else it would be better to have single user preference API and database entry
-	mux.HandleFunc("GET /preference", enableCorsAnd(c.getUserPreference))
-	// change Interval
-	mux.HandleFunc("POST /preference/interval/{new_interval}", c.changeInterval)
-	// change Temperature Unit
-	mux.HandleFunc("POST /preference/temp_unit/{new_unit}", c.changeTempUnit)
+	// Get user preference
+	mux.HandleFunc("GET /api/preference", enableCorsAnd(c.getUserPreference))
+	// change user preference
+	mux.HandleFunc("POST /api/preference", enableCorsAnd(c.updateUserPreference))
 
 	// SERVER
 	server := &http.Server{
@@ -64,6 +71,7 @@ func enableCorsAnd(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Vite app
 		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+		w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept, Origin, Authorization")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 
 		if r.Method == "OPTIONS" {

@@ -2,7 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"io"
+	"log/slog"
 	"net/http"
 	"time"
 )
@@ -46,36 +47,44 @@ func (c *Config) getUserPreference(w http.ResponseWriter, r *http.Request) {
 	w.Write(respData)
 }
 
-func (c *Config) changeInterval(w http.ResponseWriter, r *http.Request) {
-	newInterval := r.PathValue("new_interval")
-
-	interval, err := time.ParseDuration(newInterval)
-	if err != nil {
-		sendError(w, err, http.StatusBadRequest)
-		return
-	}
-
-	c.UserPref.Interval = interval
-
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte("Interval changed!"))
+type UpdateUserPreference struct {
+	TempUnit string `json:"temp_unit"`
+	Interval string `json:"interval"`
 }
 
-func (c *Config) changeTempUnit(w http.ResponseWriter, r *http.Request) {
-	newUnit := r.PathValue("new_unit")
-
-	switch newUnit {
-	case "kelvin":
-		c.UserPref.TempUnit = Kelvin
-	case "celsius":
-		c.UserPref.TempUnit = Celsius
-	default:
-		sendError(w, fmt.Errorf("unknown temperature unit: %s", newUnit), http.StatusBadRequest)
+// updateUserPreference updates the user settings, for making it simple they are only
+// on memory (application level) and not on storege (database)
+func (c *Config) updateUserPreference(w http.ResponseWriter, r *http.Request) {
+	slog.Info("Updating user preference")
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		sendError(w, err, http.StatusInternalServerError)
 		return
 	}
 
+	var newPreference UpdateUserPreference
+	err = json.Unmarshal(data, &newPreference)
+
+	if err != nil {
+		sendError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	newInterval, err := time.ParseDuration(newPreference.Interval)
+	if err != nil {
+		sendError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	if newPreference.TempUnit == "kelvin" {
+		c.UserPref.TempUnit = Kelvin
+	} else {
+		c.UserPref.TempUnit = Celsius
+	}
+	c.UserPref.Interval = newInterval
+	slog.Info("Done with preference update!")
+
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte("Temperature Unit changed!"))
+	w.Write([]byte("Preference changed!"))
 }

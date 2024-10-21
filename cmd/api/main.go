@@ -3,14 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"log"
 	"os"
 )
 
 type Config struct {
-	dbConn   *pgx.Conn
+	dbConn   *pgxpool.Pool
 	UserPref *UserPreference
 }
 
@@ -58,7 +58,7 @@ func main() {
 		crashWithError("Failed to connect to database", err)
 	}
 
-	defer db.Close(ctx)
+	defer db.Close()
 
 	app.dbConn = db
 

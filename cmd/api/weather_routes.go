@@ -1,7 +1,9 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"github.com/kunalsin9h/realtime-weather/internal/db"
 	"log/slog"
 	"net/http"
@@ -51,6 +53,12 @@ func (c *Config) getDailyWeatherSummary(w http.ResponseWriter, r *http.Request) 
 		&data.MinWindSpeed,
 		&data.DominantCondition,
 	)
+
+	// err might be of no rows in result set
+	if errors.Is(err, sql.ErrNoRows) {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
 
 	if err != nil {
 		sendError(w, err, http.StatusInternalServerError)

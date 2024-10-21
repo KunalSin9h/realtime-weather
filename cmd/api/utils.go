@@ -47,10 +47,11 @@ func crashWithError(msg string, err error) {
 }
 
 func sendError(w http.ResponseWriter, err error, code ...int) {
-	w.WriteHeader(http.StatusBadRequest)
-
+	fmt.Println(err.Error())
 	if len(code) > 0 {
 		w.WriteHeader(code[0])
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
 	}
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
