@@ -28,7 +28,7 @@ export function AppSidebar() {
   const { data, isLoading } = useQuery({
     queryKey: ['cities'],
     queryFn: async () => {
-      const resp = await fetch("/cities");
+      const resp = await fetch("http://localhost:5000/cities");
       if (!resp.ok) {
         return null;
       }
