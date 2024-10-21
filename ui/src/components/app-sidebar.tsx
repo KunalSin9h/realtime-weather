@@ -63,7 +63,7 @@ export function AppSidebar() {
                     {cities.length > 0 && cities.map((city, index) => (
                 <SidebarMenuSubItem key={index}>
                   <SidebarMenuSubButton asChild>
-                    <a href={`${city.Name.toLowerCase()}&city_id=${city.ID}`}>
+                    <a href={`city&city_id=${city.ID}`}>
                       <span>{city.Name}</span>
                     </a>
                     

@@ -1,49 +1,84 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
 
 export default function Settings() {
-  const [temperatureUnit, setTemperatureUnit] = useState('Celsius');
-  const [fetchInterval, setFetchInterval] = useState(10);
+  const [temperatureUnit, setTemperatureUnit] = useState('celsius');
+  const [fetchInterval, setFetchInterval] = useState(3);
 
-  const handleTemperatureUnitChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setTemperatureUnit(event.target.value);
-  };
 
-  const handleFetchIntervalChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFetchInterval(parseInt(event.target.value, 10));
-  };
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['user_preference'],
+    queryFn: async () => {
+      const resp = await fetch("http://localhost:5000/preference");
+      if (!resp.ok || resp.status !== 200) {
+        throw new Error("API return with non 200")
+      }
+
+      return resp.json();
+    }
+  })
+
+  useEffect(() => {
+    if (data) {
+      setTemperatureUnit(data.time_unit);
+      setFetchInterval(+data.interval.replaceAll("m0s", ""))
+    }
+  }, [isLoading])
+
+  if (isLoading) {
+    return <p className="text-gray-400">Loading...</p>
+  }
+
+  if (error) {
+    return <p className="text-gray-400">Got Error: {error.message}</p>
+  }
 
   return (
-    <div className="p-4 max-w-md mx-auto">
-      <h2 className="text-2xl font-bold mb-4">Settings</h2>
+    <div className="p-4 max-w-md">
+      <h2 className="text-2xl mb-4">Settings</h2>
       <div className="mb-4">
-        <label htmlFor="temperatureUnit" className="block text-gray-700 font-bold mb-2">
+        <label htmlFor="temperatureUnit">
           Temperature Unit
         </label>
-        <select
-          id="temperatureUnit"
-          value={temperatureUnit}
-          onChange={handleTemperatureUnitChange}
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-        >
-          <option value="Celsius">Celsius</option>
-          <option value="Kelvin">Kelvin</option>
-        </select>
+        <Select value={temperatureUnit} onValueChange={setTemperatureUnit}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select unit" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="celsius">Celsius</SelectItem>
+            <SelectItem value="kelvin">Kelvin</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       <div className="mb-4">
-        <label htmlFor="fetchInterval" className="block text-gray-700 font-bold mb-2">
-          Fetch Interval (minutes)
+        <label htmlFor="fetchInterval">
+          Fetch Interval <span>in minutes</span>
         </label>
-        <input
+        <Input
           type="number"
           id="fetchInterval"
           value={fetchInterval}
-          onChange={handleFetchIntervalChange}
+          min={3}
+          max={60}
+          inputMode="numeric"
+          onChange={(e) => setFetchInterval(+e.target.value)}
           className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
         />
       </div>
-      <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+      <Button onClick={() => {
+        
+      }}>
         Save
-      </button>
+      </Button>
     </div>
   );
 }

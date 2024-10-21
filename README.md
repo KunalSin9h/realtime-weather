@@ -178,7 +178,15 @@ make test
     Our weather data was a `time-series` data. And for that a _time series_ database become a feasible choice. I have used
        _timescale_ as it is just an extension over Postgres. And it as easy abstraction called [Continuous Aggregate](https://docs.timescale.com/use-timescale/latest/continuous-aggregates/create-a-continuous-aggregate/),
         which can easily calculate the required `rollups and aggrigate` with scheduled interval.  See [migrations](migrations) folder.
+
+    We have a sql query to refresh this aggregate view. It will recalculate with the fresh data that is under 1 hr.  see [query.sql](query.sql)
  
+    ```sql
+    -- name: RefreshDailyWeatherSummary :exec
+    CALL refresh_continuous_aggregate('daily_weather_summary_view', NULL, NULL);
+    -- Manually Refresh the daily_weather_summary_view table
+    ```
+
 2. Use of `sqlc` (not `sqlx`).
  
     I have used `sqlc`, it a golang type-safe ORM which generate from raw sql queries. See [query.sql](query.sql)
