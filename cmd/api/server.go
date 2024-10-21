@@ -18,7 +18,7 @@ func (c *Config) setUpAndRunServer() error {
 
 	// GET /cities
 	// Get all the cities
-	mux.HandleFunc("GET /cities", enableCors(c.getAllCities))
+	mux.HandleFunc("GET /cities", enableCorsAnd(c.getAllCities))
 
 	// Get Daily Weather Summary for City with city_id
 	mux.HandleFunc("GET /summary/{city_id}", c.getDailyWeatherSummary)
@@ -44,7 +44,7 @@ func (c *Config) setUpAndRunServer() error {
 	// User Preference
 	// Since there are only two user preferences, I am doing simple way.
 	// else it would be better to have single user preference API and database entry
-	mux.HandleFunc("GET /preference", c.getUserPreference)
+	mux.HandleFunc("GET /preference", enableCorsAnd(c.getUserPreference))
 	// change Interval
 	mux.HandleFunc("POST /preference/interval/{new_interval}", c.changeInterval)
 	// change Temperature Unit
@@ -60,10 +60,10 @@ func (c *Config) setUpAndRunServer() error {
 	return server.ListenAndServe()
 }
 
-func enableCors(next http.HandlerFunc) http.HandlerFunc {
+func enableCorsAnd(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Vite app
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5174")
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 
 		if r.Method == "OPTIONS" {
