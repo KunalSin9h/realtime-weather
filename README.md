@@ -183,6 +183,6 @@ make test
  
     I have used `sqlc`, it a golang type-safe ORM which generate from raw sql queries. See [query.sql](query.sql)
 
-3. Use of React 
+3. Use of React + Tailwind + Shadcn
 
-    I have used React with Vite, for its simplicity and quick building process.
+    I have used React with Vite and Shadcd for their simplicity and quick building process.

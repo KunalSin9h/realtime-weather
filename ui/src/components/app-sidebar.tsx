@@ -14,19 +14,28 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
-
-const cities = [
-    {
-        title: "Delhi",
-        url: "/city/dehli"
-    },
-    {
-        title: "Mumbai",
-        url: "/city/mumbai"
-    }
-]
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 
 export function AppSidebar() {
+    const [cities, setCities] = useState<String[]>([])
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['cities'],
+    queryFn: async () => {
+      const resp = await fetch("/");
+      console.log(resp);
+      console.log(resp.status);
+      if (!resp.ok) {
+        return null;
+      }
+      return resp.json();
+    }
+  })
+
+  console.log(isLoading);
+  console.log(data)
+
   return (
     <Sidebar>
       <SidebarContent>
@@ -46,15 +55,20 @@ export function AppSidebar() {
                 </CollapsibleTrigger>
              <CollapsibleContent>
                     <SidebarMenuSub>
-                    {cities.map((city) => (
-                <SidebarMenuSubItem key={city.title}>
+                    {cities.length > 0 && cities.map((city, index) => (
+                <SidebarMenuSubItem key={index}>
                   <SidebarMenuSubButton asChild>
-                    <a href={city.url}>
-                      <span>{city.title}</span>
+                    <a href={city.toLowerCase()}>
+                      <span>{city}</span>
                     </a>
+                    
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
               ))}
+
+                    <SidebarMenuSubItem>
+                    {isLoading && <p className="text-xs text-gray-400 pl-4">Loading...</p>}
+                    </SidebarMenuSubItem>
                     </SidebarMenuSub>
             </CollapsibleContent>
                 </SidebarMenuItem>

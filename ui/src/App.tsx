@@ -1,5 +1,7 @@
 export default function App() {
   return (
-    <h1>Hello</h1>
+    <div className="flex h-full w-full items-center justify-center">
+      <p className="text-2xl italic">Select a city!</p>
+    </div>
   )
 }

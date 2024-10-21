@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/kunalsin9h/realtime-weather/internal/db"
 	"log/slog"
 	"net/http"
 )
@@ -13,6 +15,10 @@ func (c *Config) setUpAndRunServer() error {
 	// GET /
 	// Serve Static Frontend Dashboard
 	mux.Handle("GET /", http.FileServer(http.Dir("./ui/dist/")))
+
+	// GET /cities
+	// Get all the cities
+	mux.HandleFunc("GET /cities", c.getAllCities)
 
 	// Get Daily Weather Summary for City with city_id
 	mux.HandleFunc("GET /summary/{city_id}", c.getDailyWeatherSummary)
@@ -52,4 +58,25 @@ func (c *Config) setUpAndRunServer() error {
 
 	slog.Info(fmt.Sprintf("Listening on http://%s", server.Addr))
 	return server.ListenAndServe()
+}
+
+// getAllCities give list of citie in the database
+func (c *Config) getAllCities(w http.ResponseWriter, r *http.Request) {
+	query := db.New(c.dbConn)
+	cities, err := query.GetAllCities(r.Context())
+
+	if err != nil {
+		sendError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	data, err := json.Marshal(cities)
+	if err != nil {
+		sendError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(data)
 }

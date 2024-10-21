@@ -37,6 +37,4 @@ fi
 
 >&2 echo "TimescaleDB is up and running on port ${DB_PORT}"
 
-echo ""
 echo postgres://${DB_USER}:${DB_PASSWORD}@127.0.0.1:${DB_PORT}/${DB_NAME}
-echo ""
