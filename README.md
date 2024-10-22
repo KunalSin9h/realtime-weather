@@ -55,6 +55,8 @@ docker run \
 > Make sure db is up and running
 
 ```bash
+# This is connection sting of database we started
+# postgres:// works as timescale is based on postgres
 # DATABASE_URL env var is required by sqlx for migrations
 export DATABASE_URL=postgres://admin:admin@127.0.0.1:5432/weather
 
@@ -81,7 +83,7 @@ Fill the [.env]() file with Open Weather API key. Application automatically load
 make run
 
 # or 
-go run ./...
+# go run ./...
 ```
 
 or with environment variables
