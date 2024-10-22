@@ -15,9 +15,9 @@ import (
 type LiveData struct {
 	CityID      int32              `json:"city_id"`
 	Time        pgtype.Timestamptz `json:"time"`
-	Temperature pgtype.Numeric     `json:"temperature"`
-	Humidity    pgtype.Numeric     `json:"humidity"`
-	WindSpeed   pgtype.Numeric     `json:"wind_speed"`
+	Temperature float64            `json:"temperature"`
+	Humidity    float64            `json:"humidity"`
+	WindSpeed   float64            `json:"wind_speed"`
 }
 
 // LiveDataStreams is where the fetcher (fetcher.go) sends live data
@@ -66,9 +66,13 @@ func (c *Config) liveWeatherData(w http.ResponseWriter, r *http.Request) {
 		liveData := LiveData{
 			Time:        today.Time,
 			CityID:      today.CityID,
-			Temperature: today.Temperature,
-			Humidity:    today.Humidity,
-			WindSpeed:   today.WindSpeed,
+			Temperature: pgToFloat(today.Temperature),
+			Humidity:    pgToFloat(today.Humidity),
+			WindSpeed:   pgToFloat(today.WindSpeed),
+		}
+
+		if c.UserPref.TempUnit == Celsius {
+			liveData.Temperature = convertToCelsius(liveData.Temperature)
 		}
 
 		resp, err := json.Marshal(liveData)
@@ -91,13 +95,10 @@ func (c *Config) liveWeatherData(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			// is user has celsius as prefered unit to display
-			/*			if c.UserPref.TempUnit == Celsius {
-							data.Temperature = convertToCelsiusPg(data.Temperature)
-							data.Humidity = convertToCelsiusPg(data.Humidity)
-							data.WindSpeed = convertToCelsiusPg(data.WindSpeed)
-						}
-			*/
+			if c.UserPref.TempUnit == Celsius {
+				data.Temperature = convertToCelsius(data.Temperature)
+			}
+
 			resp, err := json.Marshal(data)
 			if err != nil {
 				sendError(w, err, http.StatusInternalServerError)

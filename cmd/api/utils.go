@@ -63,21 +63,15 @@ func convertToCelsius(kelvin float64) float64 {
 	// rounding to 2 decimal places
 }
 
-func convertToCelsiusPg(kelvin pgtype.Numeric) pgtype.Numeric {
-	kelVal, err := kelvin.Float64Value()
+func pgToFloat(one pgtype.Numeric) float64 {
+	oneVal, err := one.Float64Value()
 
 	if err != nil {
 		slog.Error(err.Error())
-		return kelvin
+		return 0
 	}
 
-	kelvinValue := kelVal.Float64
-	celsiusValue := convertToCelsius(kelvinValue)
-
-	var celsius pgtype.Numeric
-	celsius.Scan(celsiusValue)
-
-	return celsius
+	return oneVal.Float64
 }
 
 func getSSEData(eventName string, data any, id, retry int64) string {

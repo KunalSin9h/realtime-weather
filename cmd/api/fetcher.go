@@ -165,9 +165,9 @@ func fetchWeatherData(ctx context.Context, city *db.City, query *db.Queries) err
 			*client <- LiveData{
 				CityID:      city.ID,
 				Time:        eventTime,
-				Temperature: weatherData.Main.Temp,
-				Humidity:    weatherData.Main.Humidity,
-				WindSpeed:   weatherData.Wind.Speed,
+				Temperature: pgToFloat(weatherData.Main.Temp),
+				Humidity:    pgToFloat(weatherData.Main.Humidity),
+				WindSpeed:   pgToFloat(weatherData.Wind.Speed),
 			}
 		}
 	}()
