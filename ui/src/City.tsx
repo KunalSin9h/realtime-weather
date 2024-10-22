@@ -9,6 +9,9 @@ export default function City() {
     const { city_id } = useParams();
     const [noSummary, setNoSummary] = useState(false);
 
+    if (!localStorage.getItem("temp_unit")) {
+        localStorage.setItem("temp_unit", "celsius");
+    }
 
     const { data, isLoading, refetch } = useQuery({
         queryKey: ['cities_summary'],
