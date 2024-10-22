@@ -29,7 +29,8 @@ export default function Settings() {
 
   useEffect(() => {
     if (data) {
-      setTemperatureUnit(data.time_unit);
+      setTemperatureUnit(data.temp_unit);
+      localStorage.setItem("temp_unit", data.temp_unit);
       setFetchInterval(+data.interval.replaceAll("m0s", ""))
     }
   }, [isLoading])
@@ -51,7 +52,7 @@ export default function Settings() {
           Temperature Unit
         </label>
         <Select value={temperatureUnit} onValueChange={(value) => {
-          console.log(value);
+          localStorage.setItem("temp_unit", value);
           setTemperatureUnit(value);
         }}>
           <SelectTrigger className="w-full">

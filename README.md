@@ -196,3 +196,14 @@ make test
 3. Use of React + Tailwind + Shadcn
 
     I have used React with Vite and Shadcd for their simplicity and quick building process.
+
+4. Kelvin Or Celsius
+
+    In the Project description, it is said that to convert Kelvin to Celsius while adding data in the system, with user
+    preference. In my having opting of change unit and also adding in the database can lead to data inconsistency. Imagine
+    on day 1 use select kelvin, all the temperature data is in kelvin, and on day 2 user selected celsius which make new
+    data in the db in celsius. hence for a column temperature, we have 2 different values.   
+    
+    That's why I am storing all the temperature in Kelvin. But With user preference, use can chose to receive data in any unit.
+    
+    ![image](https://i.imgur.com/KfBVkwG.png) 

@@ -50,7 +50,7 @@ export default function City() {
                     <p className="text-lg font-medium">Daily Weather Summary</p>
                     <p className="text-gray-400 text-xs">Updated Every 1 Hour.</p>
                 </div>
-                <RefreshButton variant="outline" refetch={refetch} title="Refresh"/>
+                <RefreshButton variant="outline" refetch={refetch} title="Forcefully Recalculate"/>
             </div>
             <dl className="bg-gray-100 rounded-md p-4 space-y-4">
                 <dt className="flex items-center gap-4">
@@ -59,15 +59,15 @@ export default function City() {
                 </dt>
                 <dt className="flex items-center gap-4">
                     <p className="text-gray-700 text-sm uppercase">Avg Temperature</p>
-                    <p className="text-gray-500"><span className="text-blue-500">{data.avg_temperature}</span>°C</p>
+                    <p className="text-gray-500"><span className="text-blue-500">{data.avg_temperature}</span> °{localStorage.getItem("temp_unit")}</p>
                 </dt>
                 <dt className="flex items-center gap-4">
                     <p className="text-gray-700 text-sm uppercase">Max Temperature</p>
-                    <p className="text-gray-500"><span className="text-blue-500">{data.max_temperature}</span>°C</p>
+                    <p className="text-gray-500"><span className="text-blue-500">{data.max_temperature}</span> °{localStorage.getItem("temp_unit")}</p>
                 </dt>
                 <dt className="flex items-center gap-4">
                     <p className="text-gray-700 text-sm uppercase">Min Temperature</p>
-                    <p className="text-gray-500"><span className="text-blue-500">{data.min_temperature}</span>°C</p>
+                    <p className="text-gray-500"><span className="text-blue-500">{data.min_temperature}</span> °{localStorage.getItem("temp_unit")}</p>
                 </dt>
                 <dt className="flex items-center gap-4">
                     <p className="text-gray-700 text-sm uppercase">Avg Humidity</p>
@@ -115,7 +115,7 @@ function RefreshButton({refetch, title, variant}) {
     })
     .then((res) => {
       if (res.ok) {
-        toast.success("Weather Summary is being calculated");
+        toast.success("Weather Summary is refreshed!");
       } else {
         toast.error("Failed to calculate weather summary");
       }

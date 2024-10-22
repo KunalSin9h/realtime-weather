@@ -29,11 +29,11 @@ func getDefaultUserPreference() *UserPreference {
 
 func (c *Config) getUserPreference(w http.ResponseWriter, r *http.Request) {
 	var data struct {
-		TimeUnit TemperatureUnit `json:"time_unit"`
+		TempUnit TemperatureUnit `json:"temp_unit"`
 		Interval string          `json:"interval"`
 	}
 
-	data.TimeUnit = c.UserPref.TempUnit
+	data.TempUnit = c.UserPref.TempUnit
 	data.Interval = c.UserPref.Interval.String()
 
 	respData, err := json.Marshal(data)
