@@ -14,7 +14,6 @@ import toast from "react-hot-toast";
 export default function Settings() {
   const [temperatureUnit, setTemperatureUnit] = useState('celsius');
   const [fetchInterval, setFetchInterval] = useState(3);
-/*
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['user_preference'],
@@ -42,7 +41,7 @@ export default function Settings() {
   if (error) {
     return <p className="text-gray-400">Got Error: {error.message}</p>
   }
-    */
+
 
   return (
     <div className="p-4 max-w-md">
