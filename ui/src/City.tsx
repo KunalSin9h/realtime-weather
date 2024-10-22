@@ -1,13 +1,25 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {useParams} from "react-router-dom";
 import { Button } from "./components/ui/button";
 import toast from "react-hot-toast";
+import { LineChart } from "@/components/LineChart"
+
+  
+type LiveData = {
+  city_id: number;
+  time: string;
+  temperature: number;
+  humidity: number; 
+  wind_speed: number;
+}
 
 export default function City() {
     const { city_name } = useParams();
     const { city_id } = useParams();
     const [noSummary, setNoSummary] = useState(false);
+    const [liveData, setLiveData] = useState<LiveData[]>([]);
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
     if (!localStorage.getItem("temp_unit")) {
         localStorage.setItem("temp_unit", "celsius");
@@ -28,6 +40,20 @@ export default function City() {
           return resp.json();
         }
       })
+
+      useEffect(() => {
+
+        const events = new EventSource(`/api/cities/live/${city_id}`)
+
+        events.onmessage = (e) => {
+          const data = JSON.parse(e.data);
+          data.time = new Date(data.time).toLocaleTimeString();
+          console.log(data);
+          setLiveData((ld) => [...ld, data]);
+          setLastUpdated(new Date());
+        }
+  
+      }, [])
 
     
     if (isLoading) {
@@ -55,53 +81,106 @@ export default function City() {
                 </div>
                 <RefreshButton variant="outline" refetch={refetch} title="Forcefully Recalculate"/>
             </div>
-            <dl className="bg-gray-100 rounded-md p-4 space-y-4">
+            <div className="grid">
+              <dl className="bg-gray-100 rounded-md p-4 space-y-4">
                 <dt className="flex items-center gap-4">
-                    <p className="text-gray-700 text-sm uppercase">Date</p>
-                    <p className="text-gray-500">Today</p>
+                  <p className="text-gray-700 text-sm uppercase">Date</p>
+                  <p className="text-gray-500">Today</p>
                 </dt>
                 <dt className="flex items-center gap-4">
-                    <p className="text-gray-700 text-sm uppercase">Avg Temperature</p>
-                    <p className="text-gray-500"><span className="text-blue-500">{data.avg_temperature}</span> °{localStorage.getItem("temp_unit")}</p>
+                  <p className="text-gray-700 text-sm uppercase">Avg Temperature</p>
+                  <p className="text-gray-500">
+                    <span className="text-blue-500">{data.avg_temperature}</span>{' '}
+                    °{localStorage.getItem('temp_unit')}
+                  </p>
                 </dt>
                 <dt className="flex items-center gap-4">
-                    <p className="text-gray-700 text-sm uppercase">Max Temperature</p>
-                    <p className="text-gray-500"><span className="text-blue-500">{data.max_temperature}</span> °{localStorage.getItem("temp_unit")}</p>
+                  <p className="text-gray-700 text-sm uppercase">Max Temperature</p>
+                  <p className="text-gray-500">
+                    <span className="text-blue-500">{data.max_temperature}</span>{' '}
+                    °{localStorage.getItem('temp_unit')}
+                  </p>
                 </dt>
                 <dt className="flex items-center gap-4">
-                    <p className="text-gray-700 text-sm uppercase">Min Temperature</p>
-                    <p className="text-gray-500"><span className="text-blue-500">{data.min_temperature}</span> °{localStorage.getItem("temp_unit")}</p>
+                  <p className="text-gray-700 text-sm uppercase">Min Temperature</p>
+                  <p className="text-gray-500">
+                    <span className="text-blue-500">{data.min_temperature}</span>{' '}
+                    °{localStorage.getItem('temp_unit')}
+                  </p>
                 </dt>
                 <dt className="flex items-center gap-4">
-                    <p className="text-gray-700 text-sm uppercase">Avg Humidity</p>
-                    <p className="text-gray-500"><span className="text-blue-500">{data.avg_humidity}</span>%</p>
+                  <p className="text-gray-700 text-sm uppercase">Avg Humidity</p>
+                  <p className="text-gray-500">
+                    <span className="text-blue-500">{data.avg_humidity}</span>%
+                  </p>
                 </dt>
                 <dt className="flex items-center gap-4">
-                    <p className="text-gray-700 text-sm uppercase">Max Humidity</p>
-                    <p className="text-gray-500"><span className="text-blue-500">{data.max_humidity}</span>%</p>
+                  <p className="text-gray-700 text-sm uppercase">Max Humidity</p>
+                  <p className="text-gray-500">
+                    <span className="text-blue-500">{data.max_humidity}</span>%
+                  </p>
                 </dt>
                 <dt className="flex items-center gap-4">
-                    <p className="text-gray-700 text-sm uppercase">Min Humidity</p>
-                    <p className="text-gray-500"><span className="text-blue-500">{data.min_humidity}</span>%</p>
+                  <p className="text-gray-700 text-sm uppercase">Min Humidity</p>
+                  <p className="text-gray-500">
+                    <span className="text-blue-500">{data.min_humidity}</span>%
+                  </p>
                 </dt>
                 <dt className="flex items-center gap-4">
-                    <p className="text-gray-700 text-sm uppercase">Avg Wind Speed</p>
-                    <p className="text-gray-500"><span className="text-blue-500">{data.avg_wind_speed}</span> km/h</p>
+                  <p className="text-gray-700 text-sm uppercase">Avg Wind Speed</p>
+                  <p className="text-gray-500">
+                    <span className="text-blue-500">{data.avg_wind_speed}</span>{' '}
+                    km/h
+                  </p>
                 </dt>
                 <dt className="flex items-center gap-4">
-                    <p className="text-gray-700 text-sm uppercase">Max Wind Speed</p>
-                    <p className="text-gray-500"><span className="text-blue-500">{data.max_wind_speed}</span> km/h</p>
+                  <p className="text-gray-700 text-sm uppercase">Max Wind Speed</p>
+                  <p className="text-gray-500">
+                    <span className="text-blue-500">{data.max_wind_speed}</span>{' '}
+                    km/h
+                  </p>
                 </dt>
                 <dt className="flex items-center gap-4">
-                    <p className="text-gray-700 text-sm uppercase">Min Wind Speed</p>
-                    <p className="text-gray-500"><span className="text-blue-500">{data.min_wind_speed}</span> km/h</p>
+                  <p className="text-gray-700 text-sm uppercase">Min Wind Speed</p>
+                  <p className="text-gray-500">
+                    <span className="text-blue-500">{data.min_wind_speed}</span>{' '}
+                    km/h
+                  </p>
                 </dt>
                 <dt className="flex items-center gap-4">
-                    <p className="text-gray-700 text-sm uppercase">Dominant Condition</p>
-                    <p className="text-blue-500">{data.dominant_condition}</p>
+                  <p className="text-gray-700 text-sm uppercase">
+                    Dominant Condition
+                  </p>
+                  <p className="text-blue-500">{data.dominant_condition}</p>
                 </dt>
-            </dl>
+              </dl>
         </div>
+        <div className="mt-8">
+                <p>Weater Data</p>
+                <p className="text-sm text-gray-400">Last Updated: {lastUpdated ? (
+                  lastUpdated.getMinutes() > 2 ? (
+                    lastUpdated.getMinutes() > 3 ? (
+                      'Just Now'
+                    ) : (
+                      '2 minutes ago'
+                    )
+                  ) : (
+                    '3 minutes ago'
+                  )
+                ) : 'N/A'}</p>
+                <LineChart
+    className="h-96 w-[60%]"
+    data={liveData}
+    index="time"
+    categories={["temperature", "humidity", "wind_speed"]}
+    valueFormatter={(number: number) => `${number}`}
+    onValueChange={(v) => console.log(v)}
+    xAxisLabel="Time"
+    yAxisLabel="Data"
+  />
+
+              </div>
+            </div>
     );
     return 
 }

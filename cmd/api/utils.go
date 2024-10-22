@@ -62,3 +62,24 @@ func convertToCelsius(kelvin float64) float64 {
 	return math.Round((kelvin-273.15)*1000) / 1000
 	// rounding to 2 decimal places
 }
+
+func convertToCelsiusPg(kelvin pgtype.Numeric) pgtype.Numeric {
+	kelVal, err := kelvin.Float64Value()
+
+	if err != nil {
+		slog.Error(err.Error())
+		return kelvin
+	}
+
+	kelvinValue := kelVal.Float64
+	celsiusValue := convertToCelsius(kelvinValue)
+
+	var celsius pgtype.Numeric
+	celsius.Scan(celsiusValue)
+
+	return celsius
+}
+
+func getSSEData(eventName string, data any, id, retry int64) string {
+	return fmt.Sprintf("event: %s\ndata: %s\nid: %d\nretry: %d\n\n", eventName, data, id, retry)
+}

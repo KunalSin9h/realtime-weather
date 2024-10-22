@@ -8,6 +8,12 @@ INSERT INTO weather_data (
   $1, $2, $3, $4, $5, $6, $7
 );
 
+-- name: GetTodaysWeatherData :many
+SELECT *
+FROM weather_data
+WHERE time >= date_trunc('day', NOW())
+  AND time < date_trunc('day', NOW()) + INTERVAL '1 day';
+
 -- It's a function in migrations folder, is used continuous aggregate feature of timescale
 -- name: GetTodayWeatherSummary :one
 SELECT * FROM get_latest_daily_summary($1);

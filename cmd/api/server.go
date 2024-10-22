@@ -36,10 +36,9 @@ func (c *Config) setUpAndRunServer() error {
 	// Refresh Daily Weather Summary
 	mux.HandleFunc("POST /api/cities/summary/refresh", enableCorsAnd(c.refreshDailySummaryViewTable))
 
-	// change user preference
-	// temperature
-
-	// ALERTS
+	// GET Weather Data for A City
+	// Realtime using SSE (Server Sent Events)
+	mux.HandleFunc("GET /api/cities/live/{city_id}", enableCorsAnd(c.liveWeatherData))
 
 	// Send alerts on API Pooling
 	// alerts are created

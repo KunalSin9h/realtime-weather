@@ -295,6 +295,41 @@ func (q *Queries) GetTodayWeatherSummary(ctx context.Context, cityIDParam int32)
 	return get_latest_daily_summary, err
 }
 
+const getTodaysWeatherData = `-- name: GetTodaysWeatherData :many
+SELECT time, city_id, condition_id, temperature, feels_like, humidity, wind_speed
+FROM weather_data
+WHERE time >= date_trunc('day', NOW())
+  AND time < date_trunc('day', NOW()) + INTERVAL '1 day'
+`
+
+func (q *Queries) GetTodaysWeatherData(ctx context.Context) ([]WeatherDatum, error) {
+	rows, err := q.db.Query(ctx, getTodaysWeatherData)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []WeatherDatum
+	for rows.Next() {
+		var i WeatherDatum
+		if err := rows.Scan(
+			&i.Time,
+			&i.CityID,
+			&i.ConditionID,
+			&i.Temperature,
+			&i.FeelsLike,
+			&i.Humidity,
+			&i.WindSpeed,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const refreshDailyWeatherSummary = `-- name: RefreshDailyWeatherSummary :exec
 CALL refresh_continuous_aggregate('daily_weather_summary_view', NULL, NULL)
 `

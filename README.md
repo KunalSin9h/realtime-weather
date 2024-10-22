@@ -117,6 +117,7 @@ Now Open [http://localhost:5000](http://localhost:5000)
 ## UI Demo
 
 ![demo](https://i.imgur.com/VPV7GiF.png)
+![demo-2](https://i.imgur.com/F5FkzlK.png)
 
 ## Results
 

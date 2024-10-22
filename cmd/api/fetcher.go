@@ -131,8 +131,10 @@ func fetchWeatherData(ctx context.Context, city *db.City, query *db.Queries) err
 		return err
 	}
 
+	eventTime := calTimestampWithTZ(weatherData.DT, weatherData.Timezone)
+
 	dbData := db.AddWeatherDataParams{
-		Time:        calTimestampWithTZ(weatherData.DT, weatherData.Timezone),
+		Time:        eventTime,
 		CityID:      city.ID,
 		ConditionID: wdID,
 		Temperature: weatherData.Main.Temp,
@@ -150,6 +152,25 @@ func fetchWeatherData(ctx context.Context, city *db.City, query *db.Queries) err
 	// in background
 	// concurrently check for any alert threshold on this dbData (weather data)
 	go checkThresholds(ctx, dbData, wdID, query)
+
+	// concurrently send live data to clients
+	go func() {
+		// Send live data in to channel
+		// to all clients
+		for _, client := range LiveDataStreams {
+			if client == nil {
+				continue
+			}
+
+			*client <- LiveData{
+				CityID:      city.ID,
+				Time:        eventTime,
+				Temperature: weatherData.Main.Temp,
+				Humidity:    weatherData.Main.Humidity,
+				WindSpeed:   weatherData.Wind.Speed,
+			}
+		}
+	}()
 
 	slog.Info("Done")
 	return nil
